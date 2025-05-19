@@ -7,6 +7,7 @@ import { PieChart, Pie, Cell, Tooltip } from "recharts";
 import { mockExpenses, mockCategories } from '@/lib/data';
 import type { ChartConfig } from "@/components/ui/chart";
 import { useMemo, useState, useEffect } from "react";
+import * as LucideIcons from 'lucide-react';
 
 const chartColors = [
   "hsl(var(--chart-1))",
@@ -36,17 +37,18 @@ export default function SpendingByCategoryChart() {
         name: category.name,
         value: spendingByCategory[category.id] || 0,
         fill: chartColors[index % chartColors.length],
-        icon: category.icon,
+        iconName: category.iconName, // Store iconName
       }))
       .filter(item => item.value > 0) // Only show categories with spending
       .sort((a, b) => b.value - a.value); // Sort by value descending
 
     const config: ChartConfig = {};
     data.forEach(item => {
+      const IconComponent = LucideIcons[item.iconName as keyof typeof LucideIcons] || LucideIcons.Tag;
       config[item.name] = {
         label: item.name,
         color: item.fill,
-        icon: item.icon,
+        icon: IconComponent, // Look up the component
       };
     });
     return { chartData: data, chartConfig: config };

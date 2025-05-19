@@ -41,11 +41,11 @@ export function CategoryFormDialog({
   }, [controlledOpen]);
 
   const handleSubmit = (data: { name: string; icon: keyof typeof LucideIcons }) => {
-    const IconComponent = LucideIcons[data.icon];
+    // data.icon is the icon name (string)
     const newOrUpdatedCategory: Category = {
       id: category?.id || `cat${Date.now()}`,
       name: data.name,
-      icon: typeof IconComponent === 'function' ? IconComponent : LucideIcons.Tag, // Fallback icon
+      iconName: data.icon, // Store the icon name string
     };
     
     // Mock data update

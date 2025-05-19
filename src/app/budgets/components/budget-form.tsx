@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Category, Budget } from '@/lib/types';
+import * as LucideIcons from 'lucide-react';
 
 const budgetFormSchema = z.object({
   categoryId: z.string().min(1, { message: "Please select a category." }),
@@ -65,14 +66,17 @@ export default function BudgetForm({ categories, budget, onSubmit, onClose }: Bu
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                       <div className="flex items-center gap-2">
-                        <category.icon className="h-4 w-4 text-muted-foreground" />
-                        {category.name}
-                      </div>
-                    </SelectItem>
-                  ))}
+                  {categories.map((category) => {
+                    const IconComponent = LucideIcons[category.iconName as keyof typeof LucideIcons] || LucideIcons.Tag;
+                    return (
+                      <SelectItem key={category.id} value={category.id}>
+                        <div className="flex items-center gap-2">
+                          <IconComponent className="h-4 w-4 text-muted-foreground" />
+                          {category.name}
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
               <FormMessage />

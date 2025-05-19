@@ -39,13 +39,13 @@ interface CategoryFormProps {
 }
 
 export default function CategoryForm({ category, onSubmit, onClose }: CategoryFormProps) {
-  const defaultIconName = category ? (Object.keys(LucideIcons) as (keyof typeof LucideIcons)[]).find(key => LucideIcons[key] === category.icon) : 'Tag';
+  const defaultIconName = category ? category.iconName : 'Tag';
   
   const form = useForm<CategoryFormValues>({
     resolver: zodResolver(categoryFormSchema),
     defaultValues: category ? {
       name: category.name,
-      icon: defaultIconName || 'Tag',
+      icon: (iconNames.includes(category.iconName as keyof typeof LucideIcons) ? category.iconName : 'Tag') as keyof typeof LucideIcons,
     } : {
       name: "",
       icon: "Tag" as keyof typeof LucideIcons,
@@ -59,7 +59,7 @@ export default function CategoryForm({ category, onSubmit, onClose }: CategoryFo
   };
   
   const selectedIconName = form.watch("icon");
-  const SelectedIcon = LucideIcons[selectedIconName as keyof typeof LucideIcons] || LucideIcons.Tag;
+  const SelectedIconComponent = LucideIcons[selectedIconName as keyof typeof LucideIcons] || LucideIcons.Tag;
 
 
   return (
@@ -94,11 +94,12 @@ export default function CategoryForm({ category, onSubmit, onClose }: CategoryFo
                   <SelectContent className="max-h-60">
                     {iconNames.map((iconName) => {
                       const IconComponent = LucideIcons[iconName as keyof typeof LucideIcons];
-                      if (typeof IconComponent !== 'function') return null; // Skip non-component exports
+                      if (typeof IconComponent !== 'function' && typeof IconComponent !== 'object') return null; // Skip non-component exports (like default)
+                      const ActualIcon = typeof IconComponent === 'function' ? IconComponent : LucideIcons.Tag; // Lucide icons are objects with render function
                       return (
                         <SelectItem key={iconName} value={iconName}>
                           <div className="flex items-center gap-2">
-                            <IconComponent className="h-4 w-4" />
+                            <ActualIcon className="h-4 w-4" />
                             {iconName}
                           </div>
                         </SelectItem>
@@ -106,7 +107,7 @@ export default function CategoryForm({ category, onSubmit, onClose }: CategoryFo
                     })}
                   </SelectContent>
                 </Select>
-                {SelectedIcon && <SelectedIcon className="h-8 w-8 p-1 border rounded-md text-muted-foreground" />}
+                {SelectedIconComponent && <SelectedIconComponent className="h-8 w-8 p-1 border rounded-md text-muted-foreground" />}
               </div>
               <FormMessage />
             </FormItem>

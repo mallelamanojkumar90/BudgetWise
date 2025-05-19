@@ -7,6 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import type { Category } from '@/lib/types';
 import { MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import { CategoryFormDialog } from './category-form-dialog';
+import * as LucideIcons from 'lucide-react';
 
 interface CategoriesTableProps {
   categories: Category[];
@@ -56,34 +57,37 @@ export default function CategoriesTable({ categories: initialCategories }: Categ
           </TableRow>
         </TableHeader>
         <TableBody>
-          {categories.length > 0 ? categories.map((category) => (
-            <TableRow key={category.id}>
-              <TableCell><category.icon className="h-5 w-5 text-muted-foreground" /></TableCell>
-              <TableCell className="font-medium">{category.name}</TableCell>
-              <TableCell className="text-right">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
-                      <span className="sr-only">Open menu</span>
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem onClick={() => handleEdit(category)}>
-                      <Edit className="mr-2 h-4 w-4" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => handleDelete(category.id)} className="text-red-600 focus:text-red-600 focus:bg-red-50">
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-            </TableRow>
-          )) : (
+          {categories.length > 0 ? categories.map((category) => {
+            const IconComponent = LucideIcons[category.iconName as keyof typeof LucideIcons] || LucideIcons.Tag;
+            return (
+              <TableRow key={category.id}>
+                <TableCell><IconComponent className="h-5 w-5 text-muted-foreground" /></TableCell>
+                <TableCell className="font-medium">{category.name}</TableCell>
+                <TableCell className="text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Open menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuItem onClick={() => handleEdit(category)}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => handleDelete(category.id)} className="text-red-600 focus:text-red-600 focus:bg-red-50">
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            );
+          }) : (
             <TableRow>
               <TableCell colSpan={3} className="h-24 text-center text-muted-foreground">
                 No categories found. Add your first category!

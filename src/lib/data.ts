@@ -1,17 +1,17 @@
 import type { Category, Expense, Budget } from './types';
-import { ShoppingCart, Utensils, Home, Car, Heart, Tag, Plane, Shirt, Film, Gift } from 'lucide-react';
+// Icon components are no longer directly used here, only their names.
 
 export const mockCategories: Category[] = [
-  { id: 'cat1', name: 'Groceries', icon: ShoppingCart },
-  { id: 'cat2', name: 'Dining Out', icon: Utensils },
-  { id: 'cat3', name: 'Housing', icon: Home },
-  { id: 'cat4', name: 'Transportation', icon: Car },
-  { id: 'cat5', name: 'Health', icon: Heart },
-  { id: 'cat6', name: 'Travel', icon: Plane },
-  { id: 'cat7', name: 'Clothing', icon: Shirt },
-  { id: 'cat8', name: 'Entertainment', icon: Film },
-  { id: 'cat9', name: 'Gifts', icon: Gift },
-  { id: 'cat10', name: 'Other', icon: Tag },
+  { id: 'cat1', name: 'Groceries', iconName: 'ShoppingCart' },
+  { id: 'cat2', name: 'Dining Out', iconName: 'Utensils' },
+  { id: 'cat3', name: 'Housing', iconName: 'Home' },
+  { id: 'cat4', name: 'Transportation', iconName: 'Car' },
+  { id: 'cat5', name: 'Health', iconName: 'Heart' },
+  { id: 'cat6', name: 'Travel', iconName: 'Plane' },
+  { id: 'cat7', name: 'Clothing', iconName: 'Shirt' },
+  { id: 'cat8', name: 'Entertainment', iconName: 'Film' },
+  { id: 'cat9', name: 'Gifts', iconName: 'Gift' },
+  { id: 'cat10', name: 'Other', iconName: 'Tag' },
 ];
 
 export const mockExpenses: Expense[] = [
