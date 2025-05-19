@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
@@ -63,7 +64,7 @@ export default function SpendingByCategoryChart() {
         <CardContent className="flex items-center justify-center h-[300px]">
           <p>Loading chart...</p>
         </CardContent>
-        <CardFooter className="text-xs text-muted-foreground">
+        <CardFooter className="text-xs text-muted-foreground pt-4">
             Data from current month.
         </CardFooter>
       </Card>
@@ -80,7 +81,7 @@ export default function SpendingByCategoryChart() {
         <CardContent className="flex items-center justify-center h-[300px]">
           <p>No spending data available for this period.</p>
         </CardContent>
-         <CardFooter className="text-xs text-muted-foreground">
+         <CardFooter className="text-xs text-muted-foreground pt-4">
             Add expenses to see them here.
         </CardFooter>
       </Card>
@@ -111,11 +112,12 @@ export default function SpendingByCategoryChart() {
                 <Cell key={`cell-${entry.name}`} fill={entry.fill} />
               ))}
             </Pie>
+            <ChartLegend content={<ChartLegendContent nameKey="name" className="flex-wrap justify-center"/>} />
           </PieChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col gap-2 text-sm mt-auto">
-        <ChartLegend content={<ChartLegendContent nameKey="name" />} className="flex-wrap justify-center" />
+      <CardFooter className="text-xs text-muted-foreground pt-4">
+        Current month's spending breakdown by category.
       </CardFooter>
     </Card>
   );

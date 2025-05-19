@@ -1,3 +1,4 @@
+
 "use client";
 // This component is very similar to the dashboard's SpendingByCategoryChart
 // but could be adapted for more detailed reporting options in the future (e.g., date range selection)
@@ -67,6 +68,9 @@ export default function CategoryBreakdownChart() {
         <CardContent className="flex items-center justify-center h-[400px]">
            <p>Loading chart...</p>
         </CardContent>
+         <CardFooter className="text-xs text-muted-foreground pt-4">
+          Data from the current period.
+        </CardFooter>
       </Card>
     );
   }
@@ -81,6 +85,9 @@ export default function CategoryBreakdownChart() {
         <CardContent className="flex items-center justify-center h-[400px]">
           <p>No spending data to display.</p>
         </CardContent>
+        <CardFooter className="text-xs text-muted-foreground pt-4">
+          Add expenses to see the breakdown here.
+        </CardFooter>
       </Card>
     );
   }
@@ -113,11 +120,12 @@ export default function CategoryBreakdownChart() {
                 <Cell key={`cell-${entry.name}`} fill={entry.fill} />
               ))}
             </Pie>
+            <ChartLegend content={<ChartLegendContent nameKey="name" className="flex-wrap justify-center" />} />
           </PieChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col gap-2 text-sm mt-auto pt-4">
-        <ChartLegend content={<ChartLegendContent nameKey="name" />} className="flex-wrap justify-center" />
+      <CardFooter className="text-xs text-muted-foreground pt-4">
+        Detailed overview of spending by category.
       </CardFooter>
     </Card>
   );
