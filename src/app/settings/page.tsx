@@ -1,11 +1,28 @@
+"use client";
+
+import { useState } from 'react';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
 
 export default function SettingsPage() {
+  const { toast } = useToast();
+  const [name, setName] = useState("User Name");
+  const [email, setEmail] = useState("user@example.com");
+
+  const handleProfileSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    // In a real app, you would save this data to a backend.
+    console.log("Saving profile:", { name, email });
+    toast({
+      title: "Profile Saved",
+      description: "Your profile information has been updated.",
+    });
+  };
+
   return (
     <>
       <PageHeader 
@@ -13,25 +30,27 @@ export default function SettingsPage() {
         description="Manage your application settings and preferences."
       />
       <div className="space-y-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile</CardTitle>
-            <CardDescription>Update your personal information.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label htmlFor="name">Name</Label>
-                <Input id="name" defaultValue="User Name" />
+        <form onSubmit={handleProfileSave}>
+          <Card>
+            <CardHeader>
+              <CardTitle>Profile</CardTitle>
+              <CardDescription>Update your personal information.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label htmlFor="name">Name</Label>
+                  <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                </div>
               </div>
-              <div className="space-y-1">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" defaultValue="user@example.com" />
-              </div>
-            </div>
-            <Button>Save Profile</Button>
-          </CardContent>
-        </Card>
+              <Button type="submit">Save Profile</Button>
+            </CardContent>
+          </Card>
+        </form>
 
         <Card>
           <CardHeader>
