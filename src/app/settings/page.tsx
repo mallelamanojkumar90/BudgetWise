@@ -9,6 +9,19 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { mockBudgets, mockCategories, mockExpenses } from '@/lib/data';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import { format } from 'date-fns';
+import JSZip from 'jszip';
+
+
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
+  }
+}
+
+type ExportFormat = 'json' | 'pdf' | 'csv';
 
 export default function SettingsPage() {
   const { toast } = useToast();
@@ -16,6 +29,7 @@ export default function SettingsPage() {
   const [email, setEmail] = useState("user@example.com");
   const [currency, setCurrency] = useState("USD");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [exportFormat, setExportFormat] = useState<ExportFormat>('json');
 
   const handleProfileSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +50,13 @@ export default function SettingsPage() {
   };
 
   const handleExport = () => {
-    exportAsJson();
+    if (exportFormat === 'json') {
+      exportAsJson();
+    } else if (exportFormat === 'pdf') {
+      exportAsPdf();
+    } else if (exportFormat === 'csv') {
+      exportAsCsv();
+    }
   };
 
   const exportAsJson = () => {
@@ -58,6 +78,88 @@ export default function SettingsPage() {
     toast({
       title: "Data Exported",
       description: "Your data has been downloaded as budgetwise_data.json.",
+    });
+  };
+
+   const exportAsPdf = () => {
+    const doc = new jsPDF();
+    
+    // Title
+    doc.text("BudgetWise Data Export", 14, 16);
+    doc.setFontSize(12);
+
+    // Categories
+    doc.autoTable({
+      startY: 22,
+      head: [['Categories']],
+      body: [[]],
+      theme: 'plain',
+      styles: { fontStyle: 'bold' }
+    });
+    doc.autoTable({
+      head: [['ID', 'Name', 'Icon']],
+      body: mockCategories.map(c => [c.id, c.name, c.iconName]),
+    });
+
+    // Expenses
+    doc.autoTable({
+      head: [['Expenses']],
+      body: [[]],
+      theme: 'plain',
+      styles: { fontStyle: 'bold' }
+    });
+    doc.autoTable({
+      head: [['ID', 'Description', 'Amount', 'Category ID', 'Date']],
+      body: mockExpenses.map(e => [e.id, e.description, `$${e.amount.toFixed(2)}`, e.categoryId, format(e.date, 'yyyy-MM-dd')]),
+    });
+
+    // Budgets
+     doc.autoTable({
+      head: [['Budgets']],
+      body: [[]],
+      theme: 'plain',
+      styles: { fontStyle: 'bold' }
+    });
+    doc.autoTable({
+      head: [['ID', 'Category', 'Budgeted', 'Spent', 'Period']],
+      body: mockBudgets.map(b => [b.id, b.categoryName, `$${b.amount.toFixed(2)}`, `$${b.spentAmount.toFixed(2)}`, b.period]),
+    });
+
+    doc.save('budgetwise_data.pdf');
+    toast({
+      title: "Data Exported",
+      description: "Your data has been downloaded as budgetwise_data.pdf.",
+    });
+  };
+
+  const exportAsCsv = async () => {
+    const zip = new JSZip();
+
+    // Categories
+    const categoriesCsv = "id,name,iconName\n" + mockCategories.map(c => `${c.id},${c.name},${c.iconName}`).join("\n");
+    zip.file("categories.csv", categoriesCsv);
+
+    // Expenses
+    const expensesCsv = "id,description,amount,categoryId,date\n" + mockExpenses.map(e => `${e.id},"${e.description}",${e.amount},${e.categoryId},${format(e.date, 'yyyy-MM-dd')}`).join("\n");
+    zip.file("expenses.csv", expensesCsv);
+
+    // Budgets
+    const budgetsCsv = "id,categoryId,categoryName,amount,spentAmount,period\n" + mockBudgets.map(b => `${b.id},${b.categoryId},${b.categoryName},${b.amount},${b.spentAmount},${b.period}`).join("\n");
+    zip.file("budgets.csv", budgetsCsv);
+
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(zipBlob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "budgetwise_data_csv.zip";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "Data Exported",
+      description: "Your data has been downloaded as budgetwise_data_csv.zip.",
     });
   };
 
@@ -167,7 +269,17 @@ export default function SettingsPage() {
           <CardContent className="space-y-4">
             <div className="flex flex-col sm:flex-row gap-4">
                 <div className="flex gap-2 items-center">
-                    <Button variant="outline" onClick={handleExport}>Export Data as JSON</Button>
+                    <Select value={exportFormat} onValueChange={(value) => setExportFormat(value as ExportFormat)}>
+                        <SelectTrigger className="w-[120px]">
+                            <SelectValue placeholder="Select format" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="json">JSON</SelectItem>
+                            <SelectItem value="pdf">PDF</SelectItem>
+                            <SelectItem value="csv">CSV (zip)</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <Button variant="outline" onClick={handleExport}>Export Data</Button>
                 </div>
                 <Button variant="outline" onClick={handleImportClick}>Import Data from JSON</Button>
                 <input 
