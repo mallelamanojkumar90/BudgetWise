@@ -262,7 +262,7 @@ export default function SettingsPage() {
               <CardHeader>
                 <CardTitle>Preferences</CardTitle>
                 <CardDescription>Customize your app experience.</CardDescription>
-              </Header>
+              </CardHeader>
               <CardContent className="space-y-4">
                  <div className="space-y-1 max-w-xs">
                   <Label htmlFor="currency">Default Currency</Label>
