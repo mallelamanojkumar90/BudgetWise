@@ -33,7 +33,7 @@ export default function SettingsPage() {
   
   const [name, setName] = useState("User Name"); // Placeholder
   const [email, setEmail] = useState(user?.email || "user@example.com");
-  const [currency, setCurrency] = useState("USD");
+  const [currency, setCurrency] = useState("INR");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [exportFormat, setExportFormat] = useState<ExportFormat>('json');
   const [isExporting, setIsExporting] = useState(false);
