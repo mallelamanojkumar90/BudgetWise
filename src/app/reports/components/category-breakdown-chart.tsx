@@ -6,7 +6,7 @@ import { PieChart, Pie, Cell } from "recharts";
 import type { Expense, Category } from '@/lib/types';
 import type { ChartConfig } from "@/components/ui/chart";
 import { useMemo, useState, useEffect } from "react";
-import * as LucideIcons from 'lucide-react';
+import { Tag } from 'lucide-react';
 
 const chartColors = [
   "hsl(var(--chart-1))",
@@ -44,18 +44,16 @@ export default function CategoryBreakdownChart({ expenses, categories }: Categor
         name: category.name,
         value: spendingByCategory[category.id] || 0,
         fill: chartColors[index % chartColors.length],
-        iconName: category.iconName,
       }))
       .filter(item => item.value > 0)
       .sort((a, b) => b.value - a.value);
 
     const config: ChartConfig = {};
     data.forEach(item => {
-      const IconComponent = LucideIcons[item.iconName as keyof typeof LucideIcons] || LucideIcons.Tag;
       config[item.name] = {
         label: item.name,
         color: item.fill,
-        icon: IconComponent,
+        icon: Tag,
       };
     });
     return { chartData: data, chartConfig: config };

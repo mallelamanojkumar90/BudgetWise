@@ -7,7 +7,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import type { Category } from '@/lib/types';
 import { MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import { CategoryFormDialog } from './category-form-dialog';
-import * as LucideIcons from 'lucide-react';
 
 interface CategoriesTableProps {
   categories: Category[];
@@ -22,12 +21,11 @@ export default function CategoriesTable({ categories, onUpdate, onDelete }: Cate
     setEditingCategory(category);
   };
   
-  const handleFormSubmit = (data: { name: string; icon: keyof typeof LucideIcons }) => {
+  const handleFormSubmit = (data: { name: string }) => {
     if (editingCategory) {
         onUpdate({
             id: editingCategory.id,
             name: data.name,
-            iconName: data.icon,
         });
     }
     setEditingCategory(null);
@@ -46,17 +44,14 @@ export default function CategoriesTable({ categories, onUpdate, onDelete }: Cate
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Icon</TableHead>
             <TableHead>Name</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {categories.length > 0 ? categories.map((category) => {
-            const IconComponent = LucideIcons[category.iconName as keyof typeof LucideIcons] || LucideIcons.Tag;
             return (
               <TableRow key={category.id}>
-                <TableCell><IconComponent className="h-5 w-5 text-muted-foreground" /></TableCell>
                 <TableCell className="font-medium">{category.name}</TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
@@ -84,7 +79,7 @@ export default function CategoriesTable({ categories, onUpdate, onDelete }: Cate
             );
           }) : (
             <TableRow>
-              <TableCell colSpan={3} className="h-24 text-center text-muted-foreground">
+              <TableCell colSpan={2} className="h-24 text-center text-muted-foreground">
                 No categories found. Add your first category!
               </TableCell>
             </TableRow>

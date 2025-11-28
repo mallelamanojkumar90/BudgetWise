@@ -8,7 +8,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import type { BudgetWithSpent, Category, Budget } from '@/lib/types';
 import { MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import { BudgetFormDialog } from './budget-form-dialog';
-import * as LucideIcons from 'lucide-react';
 
 interface BudgetsTableProps {
   budgets: BudgetWithSpent[];
@@ -60,13 +59,11 @@ export default function BudgetsTable({ budgets, categories, onUpdate, onDelete }
         <TableBody>
           {budgets.length > 0 ? budgets.map((budget) => {
             const category = getCategoryInfo(budget.categoryId);
-            const IconComponent = category ? LucideIcons[category.iconName as keyof typeof LucideIcons] || LucideIcons.Tag : LucideIcons.Tag;
             const remaining = budget.amount - budget.spentAmount;
             const progress = budget.amount > 0 ? (budget.spentAmount / budget.amount) * 100 : 0;
             return (
               <TableRow key={budget.id}>
-                <TableCell className="font-medium flex items-center">
-                  {category && <IconComponent className="h-4 w-4 mr-2 text-muted-foreground" />}
+                <TableCell className="font-medium">
                   {category?.name || 'Unknown Category'}
                 </TableCell>
                 <TableCell className="text-right">₹{budget.amount.toFixed(2)}</TableCell>

@@ -13,13 +13,12 @@ import {
 import CategoryForm from "./category-form";
 import type { Category } from '@/lib/types';
 import { PlusCircle } from 'lucide-react';
-import * as LucideIcons from 'lucide-react';
 
 interface CategoryFormDialogProps {
   category?: Category | null;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  onFormSubmit: (data: { name: string; icon: keyof typeof LucideIcons }) => void;
+  onFormSubmit: (data: { name: string }) => void;
 }
 
 export function CategoryFormDialog({ 
@@ -38,7 +37,7 @@ export function CategoryFormDialog({
     }
   }, [controlledOpen]);
 
-  const handleSubmit = (data: { name: string; icon: keyof typeof LucideIcons }) => {
+  const handleSubmit = (data: { name: string }) => {
     onFormSubmit(data);
     setIsOpen(false);
   };

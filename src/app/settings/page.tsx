@@ -138,8 +138,8 @@ export default function SettingsPage() {
       styles: { fontStyle: 'bold' }
     });
     doc.autoTable({
-      head: [['ID', 'Name', 'Icon']],
-      body: data.categories.map(c => [c.id, c.name, c.iconName]),
+      head: [['ID', 'Name']],
+      body: data.categories.map(c => [c.id, c.name]),
     });
 
     doc.autoTable({
@@ -172,7 +172,7 @@ export default function SettingsPage() {
   const exportAsCsv = async (data: {categories: Category[], expenses: (Omit<Expense, 'date'> & { date: Date })[], budgets: Budget[]}) => {
     const zip = new JSZip();
 
-    const categoriesCsv = "id,name,iconName,userId\n" + data.categories.map(c => `${c.id},${c.name},${c.iconName},${c.userId}`).join("\n");
+    const categoriesCsv = "id,name,userId\n" + data.categories.map(c => `${c.id},${c.name},${c.userId}`).join("\n");
     zip.file("categories.csv", categoriesCsv);
 
     const expensesCsv = "id,description,amount,categoryId,date,userId\n" + data.expenses.map(e => `${e.id},"${e.description}",${e.amount},${e.categoryId},${format(e.date, 'yyyy-MM-dd')},${e.userId}`).join("\n");
