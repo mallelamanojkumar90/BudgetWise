@@ -13,14 +13,13 @@ import {
 import BudgetForm from "./budget-form";
 import type { Category, Budget } from '@/lib/types';
 import { PlusCircle } from 'lucide-react';
-import { mockBudgets } from '@/lib/data'; // For mock data manipulation
 
 interface BudgetFormDialogProps {
   categories: Category[];
   budget?: Budget | null;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  onFormSubmit?: (budget: Budget) => void;
+  onFormSubmit?: (budget: Omit<Budget, 'spentAmount' | 'period'>) => void;
 }
 
 export function BudgetFormDialog({ 
@@ -41,23 +40,13 @@ export function BudgetFormDialog({
   }, [controlledOpen]);
 
   const handleSubmit = (data: { categoryId: string, amount: number }) => {
-    const newOrUpdatedBudget: Budget = {
+    const newOrUpdatedBudget: Omit<Budget, 'spentAmount' | 'period'> = {
       id: budget?.id || `bud${Date.now()}`,
       categoryId: data.categoryId,
       amount: data.amount,
-      spentAmount: budget?.spentAmount || 0, // Preserve spent amount if editing, else 0
-      period: 'monthly',
       categoryName: categories.find(c => c.id === data.categoryId)?.name,
     };
 
-    // Mock data update
-    if (!budget) {
-      mockBudgets.push(newOrUpdatedBudget);
-    } else {
-      const index = mockBudgets.findIndex(b => b.id === budget.id);
-      if (index !== -1) mockBudgets[index] = newOrUpdatedBudget;
-    }
-    
     if(onFormSubmit) {
       onFormSubmit(newOrUpdatedBudget);
     }

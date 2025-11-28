@@ -14,7 +14,6 @@ import CategoryForm from "./category-form";
 import type { Category } from '@/lib/types';
 import { PlusCircle } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
-import { mockCategories } from '@/lib/data';
 
 
 interface CategoryFormDialogProps {
@@ -48,14 +47,6 @@ export function CategoryFormDialog({
       iconName: data.icon, // Store the icon name string
     };
     
-    // Mock data update
-    if (!category) {
-      mockCategories.push(newOrUpdatedCategory);
-    } else {
-      const index = mockCategories.findIndex(c => c.id === category.id);
-      if (index !== -1) mockCategories[index] = newOrUpdatedCategory;
-    }
-
     if (onFormSubmit) {
       onFormSubmit(newOrUpdatedCategory);
     }

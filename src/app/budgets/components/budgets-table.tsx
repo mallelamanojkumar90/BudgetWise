@@ -13,10 +13,10 @@ import * as LucideIcons from 'lucide-react';
 interface BudgetsTableProps {
   budgets: Budget[];
   categories: Category[];
+  onBudgetsChange: (budgets: Budget[]) => void;
 }
 
-export default function BudgetsTable({ budgets: initialBudgets, categories }: BudgetsTableProps) {
-  const [budgets, setBudgets] = useState<Budget[]>(initialBudgets);
+export default function BudgetsTable({ budgets, categories, onBudgetsChange }: BudgetsTableProps) {
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
 
   const getCategoryInfo = (categoryId: string): Category | undefined => {
@@ -24,7 +24,8 @@ export default function BudgetsTable({ budgets: initialBudgets, categories }: Bu
   };
 
   const handleDelete = (budgetId: string) => {
-    setBudgets(prev => prev.filter(b => b.id !== budgetId));
+    const updatedBudgets = budgets.filter(b => b.id !== budgetId);
+    onBudgetsChange(updatedBudgets);
   };
   
   const handleEdit = (budget: Budget) => {
@@ -32,15 +33,12 @@ export default function BudgetsTable({ budgets: initialBudgets, categories }: Bu
   };
 
   const handleFormSubmit = (updatedBudget: Budget) => {
-     setBudgets(prev => {
-      const index = prev.findIndex(b => b.id === updatedBudget.id);
-      if (index > -1) {
-        const newBudgets = [...prev];
-        newBudgets[index] = {...updatedBudget, categoryName: getCategoryInfo(updatedBudget.categoryId)?.name};
-        return newBudgets;
-      }
-      return [{...updatedBudget, categoryName: getCategoryInfo(updatedBudget.categoryId)?.name}, ...prev];
-    });
+     const index = budgets.findIndex(b => b.id === updatedBudget.id);
+     if (index > -1) {
+       const newBudgets = [...budgets];
+       newBudgets[index] = {...updatedBudget, categoryName: getCategoryInfo(updatedBudget.categoryId)?.name};
+       onBudgetsChange(newBudgets);
+     }
     setEditingBudget(null);
   };
 

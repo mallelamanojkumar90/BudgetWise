@@ -11,14 +11,15 @@ import * as LucideIcons from 'lucide-react';
 
 interface CategoriesTableProps {
   categories: Category[];
+  onCategoriesChange: (categories: Category[]) => void;
 }
 
-export default function CategoriesTable({ categories: initialCategories }: CategoriesTableProps) {
-  const [categories, setCategories] = useState<Category[]>(initialCategories);
+export default function CategoriesTable({ categories, onCategoriesChange }: CategoriesTableProps) {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
 
   const handleDelete = (categoryId: string) => {
-    setCategories(prev => prev.filter(cat => cat.id !== categoryId));
+    const updatedCategories = categories.filter(cat => cat.id !== categoryId);
+    onCategoriesChange(updatedCategories);
   };
 
   const handleEdit = (category: Category) => {
@@ -26,15 +27,12 @@ export default function CategoriesTable({ categories: initialCategories }: Categ
   };
   
   const handleFormSubmit = (updatedCategory: Category) => {
-    setCategories(prev => {
-      const index = prev.findIndex(c => c.id === updatedCategory.id);
-      if (index > -1) {
-        const newCategories = [...prev];
-        newCategories[index] = updatedCategory;
-        return newCategories;
-      }
-      return [updatedCategory, ...prev];
-    });
+    const index = categories.findIndex(c => c.id === updatedCategory.id);
+    if (index > -1) {
+      const newCategories = [...categories];
+      newCategories[index] = updatedCategory;
+      onCategoriesChange(newCategories);
+    }
     setEditingCategory(null);
   };
 
