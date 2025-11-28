@@ -80,12 +80,12 @@ export default function BudgetsTable({ budgets: initialBudgets, categories }: Bu
                 </TableCell>
                 <TableCell className="text-right">${budget.amount.toFixed(2)}</TableCell>
                 <TableCell className="text-right">${budget.spentAmount.toFixed(2)}</TableCell>
-                <TableCell className={`text-right ${remaining < 0 ? 'text-red-500' : 'text-green-500'}`}>
+                <TableCell className={`text-right ${remaining < 0 ? 'text-destructive' : 'text-green-500'}`}>
                   ${remaining.toFixed(2)}
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <Progress value={progress} className="w-[80px] h-2" indicatorClassName={progress > 100 ? "bg-red-500" : ""} />
+                    <Progress value={progress} className="w-[80px] h-2" indicatorClassName={progress > 100 ? "bg-destructive" : ""} />
                     <span className="text-xs text-muted-foreground">{progress.toFixed(0)}%</span>
                   </div>
                 </TableCell>
