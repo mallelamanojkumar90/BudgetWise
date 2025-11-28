@@ -35,7 +35,7 @@ export default function ReportsPage() {
     const { user } = useUser();
     const firestore = useFirestore();
     const [dateRangeKey, setDateRangeKey] = useState<DateRangeKey>('30d');
-    const dateRange = getDateRange(dateRangeKey);
+    const dateRange = useMemo(() => getDateRange(dateRangeKey), [dateRangeKey]);
 
     const categoriesQuery = useMemoFirebase(() =>
         user ? query(collection(firestore, 'users', user.uid, 'categories')) : null,
