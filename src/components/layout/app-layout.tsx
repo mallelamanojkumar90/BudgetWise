@@ -21,6 +21,7 @@ import {
 import { useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
+import NotificationList from './notification-list';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -62,10 +63,20 @@ export default function AppLayout({ children }: AppLayoutProps) {
             </div>
             
             <div className="flex items-center gap-3 md:w-1/3 justify-end">
-              <Button variant="ghost" size="icon" className="rounded-full text-foreground/70 hover:text-foreground">
-                <Bell className="h-5 w-5" />
-                <span className="sr-only">Notifications</span>
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full text-foreground/70 hover:text-foreground">
+                    <Bell className="h-5 w-5" />
+                    <span className="sr-only">Notifications</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80">
+                  <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <NotificationList />
+                </DropdownMenuContent>
+              </DropdownMenu>
+
                <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                    <Button variant="ghost" size="icon" className="rounded-full text-foreground/70 hover:text-foreground">
