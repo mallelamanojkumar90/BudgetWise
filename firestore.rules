@@ -180,14 +180,11 @@ service cloud.firestore {
        * @principle Enforces strict ownership for all data within a user's subcollection.
        */
       match /notifications/{notificationId} {
-        allow get, list: if isOwner(userId);
+        allow get, update, delete: if isOwner(userId);
+        allow list: if isOwner(userId);
         
         allow create: if isOwner(userId) && hasValidOwnerIdOnCreate(userId);
-        allow update: if isExistingOwner(userId) && hasImmutableOwnerIdOnUpdate();
-        allow delete: if isExistingOwner(userId); // Allow users to delete their own notifications
       }
     }
   }
 }
-
-    
