@@ -7,11 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function SettingsPage() {
   const { toast } = useToast();
   const [name, setName] = useState("User Name");
   const [email, setEmail] = useState("user@example.com");
+  const [currency, setCurrency] = useState("USD");
 
   const handleProfileSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,6 +22,16 @@ export default function SettingsPage() {
     toast({
       title: "Profile Saved",
       description: "Your profile information has been updated.",
+    });
+  };
+  
+  const handlePreferencesSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    // In a real app, you would save this data to a backend.
+    console.log("Saving preferences:", { currency });
+    toast({
+      title: "Preferences Saved",
+      description: "Your preferences have been updated.",
     });
   };
 
@@ -52,23 +64,37 @@ export default function SettingsPage() {
           </Card>
         </form>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Preferences</CardTitle>
-            <CardDescription>Customize your app experience.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-1">
-              <Label htmlFor="currency">Default Currency</Label>
-              <Input id="currency" defaultValue="USD" />
-            </div>
-             <div className="space-y-1">
-              <Label htmlFor="notifications">Notifications</Label>
-              <p className="text-sm text-muted-foreground">Manage notification settings (UI placeholder).</p>
-            </div>
-            <Button>Save Preferences</Button>
-          </CardContent>
-        </Card>
+        <form onSubmit={handlePreferencesSave}>
+            <Card>
+              <CardHeader>
+                <CardTitle>Preferences</CardTitle>
+                <CardDescription>Customize your app experience.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                 <div className="space-y-1 max-w-xs">
+                  <Label htmlFor="currency">Default Currency</Label>
+                   <Select value={currency} onValueChange={setCurrency}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a currency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="USD">USD - United States Dollar</SelectItem>
+                      <SelectItem value="EUR">EUR - Euro</SelectItem>
+                      <SelectItem value="GBP">GBP - British Pound</SelectItem>
+                      <SelectItem value="JPY">JPY - Japanese Yen</SelectItem>
+                      <SelectItem value="CAD">CAD - Canadian Dollar</SelectItem>
+                      <SelectItem value="AUD">AUD - Australian Dollar</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                 <div className="space-y-1">
+                  <Label htmlFor="notifications">Notifications</Label>
+                  <p className="text-sm text-muted-foreground">Manage notification settings (UI placeholder).</p>
+                </div>
+                <Button type="submit">Save Preferences</Button>
+              </CardContent>
+            </Card>
+        </form>
         
         <Card>
           <CardHeader>
