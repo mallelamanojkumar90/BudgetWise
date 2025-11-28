@@ -14,16 +14,28 @@ export default function BudgetsPage() {
     setBudgets(prevBudgets => {
       const index = prevBudgets.findIndex(b => b.id === newOrUpdatedBudget.id);
       const category = mockCategories.find(c => c.id === newOrUpdatedBudget.categoryId);
-      const budgetWithCategoryName = { ...newOrUpdatedBudget, categoryName: category?.name };
-
+      
       if (index > -1) {
         // Update existing budget
         const newBudgets = [...prevBudgets];
-        newBudgets[index] = budgetWithCategoryName;
+        // Make sure to preserve the spentAmount
+        const existingSpentAmount = newBudgets[index].spentAmount;
+        newBudgets[index] = { 
+          ...newOrUpdatedBudget, 
+          categoryName: category?.name,
+          spentAmount: existingSpentAmount, // Preserve spent amount on edit
+          period: 'monthly'
+        };
         return newBudgets;
       } else {
-        // Add new budget
-        return [budgetWithCategoryName, ...prevBudgets];
+        // Add new budget with initialized spentAmount
+        const budgetWithDefaults = { 
+          ...newOrUpdatedBudget, 
+          categoryName: category?.name,
+          spentAmount: 0, 
+          period: 'monthly' as const
+        };
+        return [budgetWithDefaults, ...prevBudgets];
       }
     });
   };

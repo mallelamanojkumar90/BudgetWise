@@ -48,7 +48,7 @@ export function BudgetFormDialog({
     };
 
     if(onFormSubmit) {
-      onFormSubmit(newOrUpdatedBudget);
+      onFormSubmit(newOrUpdatedBudget as Budget);
     }
     setIsOpen(false);
   };
