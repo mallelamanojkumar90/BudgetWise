@@ -1,0 +1,170 @@
+/**
+ * Core Philosophy: This ruleset enforces a strict user-ownership model. All user-
+ * specific data, such as expenses, categories, and budgets, is exclusively
+ * accessible by the user who created it. The rules ensure that a user can only
+ * ever read or write data that exists within their own data tree.
+ *
+ * Data Structure: All application data is hierarchically organized under the
+ * `/users/{userId}` path. This structural segregation guarantees that all queries and
+ * document operations are naturally scoped to a single user, which simplifies
+ * security logic and improves performance. There are no top-level public collections.
+ *
+ * Key Security Decisions:
+ * - User Isolation: All data is namespaced by the user's UID in the document path.
+ *   This is the primary mechanism for enforcing data privacy.
+ * - Disallowed User Listing: To protect user privacy, it is not possible for any
+ *   client to list all documents in the top-level `/users` collection.
+ * - Ownership Integrity: On creation, documents must contain a `userId` field that
+ *   matches the `userId` in the path. This field is enforced as immutable on
+ *   updates, preventing documents from being reassigned to different users.
+ * - Prototyping Flexibility: These rules strictly control *who* can access data
+ *   but are intentionally flexible about the *shape* of that data. Apart from
+ *   critical authorization fields (`userId`, `id`), no other schema fields are
+ *   validated, allowing for rapid front-end development and iteration.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // -------------------------------------------------------------------------
+    // Helper Functions
+    // -------------------------------------------------------------------------
+
+    /**
+     * Checks if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the currently authenticated user's UID matches the provided userId.
+     * This is the core function for verifying document ownership.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Checks for ownership on an existing document. Used for update and delete.
+     * Prevents modifying or deleting documents that do not exist.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * Validates that the user's own ID field ('id') is consistent with the
+     * document path upon creation.
+     */
+    function hasValidSelfIdOnCreate(userId) {
+      return request.resource.data.id == userId;
+    }
+
+    /**
+     * Enforces that the user's own ID field ('id') is immutable on update.
+     * Allows for partial updates where the `id` field isn't provided.
+     */
+    function hasImmutableSelfIdOnUpdate() {
+      return request.resource.data.id == resource.data.id;
+    }
+
+    /**
+     * Validates that a subcollection document's owner field ('userId') is
+     * consistent with the document path upon creation.
+     */
+    function hasValidOwnerIdOnCreate(userId) {
+      return request.resource.data.userId == userId;
+    }
+
+    /**
+     * Enforces that a subcollection document's owner field ('userId') is
+     * immutable on update.
+     */
+    function hasImmutableOwnerIdOnUpdate() {
+      return request.resource.data.userId == resource.data.userId;
+    }
+
+
+    // -------------------------------------------------------------------------
+    // Collection Rules: /users
+    // -------------------------------------------------------------------------
+
+    /**
+     * @description Manages user profile documents. A user can create their own
+     *   profile, and read, update, or delete it, but cannot see other users' profiles.
+     * @path /users/{userId}
+     * @allow (auth.uid == 'user_abc') to (create) a document at `/users/user_abc`.
+     * @deny (auth.uid == 'user_xyz') to (get) a document at `/users/user_abc`.
+     * @principle Restricts access to a user's own data tree and enforces self-creation.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false; // CRITICAL: Prevent listing all users.
+
+      allow create: if isOwner(userId) && hasValidSelfIdOnCreate(userId);
+      allow update: if isExistingOwner(userId) && hasImmutableSelfIdOnUpdate();
+      allow delete: if isExistingOwner(userId);
+
+      // -----------------------------------------------------------------------
+      // Subcollection Rules: /users/{userId}/expenses
+      // -----------------------------------------------------------------------
+
+      /**
+       * @description Secures user-specific expense documents. Only the owner can
+       *   perform any read or write operations on their own expenses.
+       * @path /users/{userId}/expenses/{expenseId}
+       * @allow (auth.uid == 'user_abc') to (list) documents in `/users/user_abc/expenses`.
+       * @deny (auth.uid == 'user_xyz') to (delete) a document at `/users/user_abc/expenses/exp_123`.
+       * @principle Enforces strict ownership for all data within a user's subcollection.
+       */
+      match /expenses/{expenseId} {
+        allow get, list: if isOwner(userId);
+
+        allow create: if isOwner(userId) && hasValidOwnerIdOnCreate(userId);
+        allow update: if isExistingOwner(userId) && hasImmutableOwnerIdOnUpdate();
+        allow delete: if isExistingOwner(userId);
+      }
+
+      // -----------------------------------------------------------------------
+      // Subcollection Rules: /users/{userId}/categories
+      // -----------------------------------------------------------------------
+
+      /**
+       * @description Secures user-specific category documents. Only the owner can
+       *   perform any read or write operations on their own categories.
+       * @path /users/{userId}/categories/{categoryId}
+       * @allow (auth.uid == 'user_abc') to (create) a document in `/users/user_abc/categories`.
+       * @deny (auth.uid == 'user_xyz') to (get) a document at `/users/user_abc/categories/cat_123`.
+       * @principle Enforces strict ownership for all data within a user's subcollection.
+       */
+      match /categories/{categoryId} {
+        allow get, list: if isOwner(userId);
+
+        allow create: if isOwner(userId) && hasValidOwnerIdOnCreate(userId);
+        allow update: if isExistingOwner(userId) && hasImmutableOwnerIdOnUpdate();
+        allow delete: if isExistingOwner(userId);
+      }
+
+      // -----------------------------------------------------------------------
+      // Subcollection Rules: /users/{userId}/budgets
+      // -----------------------------------------------------------------------
+
+      /**
+       * @description Secures user-specific budget documents. Only the owner can
+       *   perform any read or write operations on their own budgets.
+       * @path /users/{userId}/budgets/{budgetId}
+       * @allow (auth.uid == 'user_abc') to (update) a document at `/users/user_abc/budgets/bud_123`.
+       * @deny (auth.uid == 'user_xyz') to (list) documents in `/users/user_abc/budgets`.
+       * @principle Enforces strict ownership for all data within a user's subcollection.
+       */
+      match /budgets/{budgetId} {
+        allow get, list: if isOwner(userId);
+
+        allow create: if isOwner(userId) && hasValidOwnerIdOnCreate(userId);
+        allow update: if isExistingOwner(userId) && hasImmutableOwnerIdOnUpdate();
+        allow delete: if isExistingOwner(userId);
+      }
+    }
+  }
+}
