@@ -84,6 +84,7 @@ export default function SettingsPage() {
                       <SelectItem value="JPY">JPY - Japanese Yen</SelectItem>
                       <SelectItem value="CAD">CAD - Canadian Dollar</SelectItem>
                       <SelectItem value="AUD">AUD - Australian Dollar</SelectItem>
+                      <SelectItem value="INR">INR - Indian Rupee</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
