@@ -9,28 +9,12 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { mockBudgets, mockCategories, mockExpenses } from '@/lib/data';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-import { format } from 'date-fns';
-
-// Extend the window interface for jspdf-autotable
-declare global {
-  interface Window {
-    jsPDF: typeof jsPDF;
-  }
-}
-
-interface jsPDFWithAutoTable extends jsPDF {
-  autoTable: (options: any) => jsPDF;
-}
-
 
 export default function SettingsPage() {
   const { toast } = useToast();
   const [name, setName] = useState("User Name");
   const [email, setEmail] = useState("user@example.com");
   const [currency, setCurrency] = useState("USD");
-  const [exportFormat, setExportFormat] = useState("json");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleProfileSave = (e: React.FormEvent) => {
@@ -52,11 +36,7 @@ export default function SettingsPage() {
   };
 
   const handleExport = () => {
-    if (exportFormat === 'json') {
-      exportAsJson();
-    } else {
-      exportAsPdf();
-    }
+    exportAsJson();
   };
 
   const exportAsJson = () => {
@@ -80,62 +60,6 @@ export default function SettingsPage() {
       description: "Your data has been downloaded as budgetwise_data.json.",
     });
   };
-
-  const exportAsPdf = () => {
-    const doc = new jsPDF() as jsPDFWithAutoTable;
-    const pageTitle = "BudgetWise Data Export";
-    const generatedDate = `Generated on: ${format(new Date(), 'PPP')}`;
-
-    // Add title and date
-    doc.setFontSize(18);
-    doc.text(pageTitle, 14, 22);
-    doc.setFontSize(11);
-    doc.text(generatedDate, 14, 30);
-
-    // Categories Table
-    doc.setFontSize(14);
-    doc.text("Categories", 14, 40);
-    doc.autoTable({
-      startY: 45,
-      head: [['Name', 'Icon']],
-      body: mockCategories.map(cat => [cat.name, cat.iconName]),
-      theme: 'grid',
-    });
-
-    // Expenses Table
-    let finalY = (doc as any).lastAutoTable.finalY || 50;
-    doc.text("Expenses", 14, finalY + 10);
-    doc.autoTable({
-      startY: finalY + 15,
-      head: [['Date', 'Description', 'Category', 'Amount']],
-      body: mockExpenses
-        .sort((a,b) => b.date.getTime() - a.date.getTime())
-        .map(exp => {
-        const categoryName = mockCategories.find(c => c.id === exp.categoryId)?.name || 'N/A';
-        return [format(exp.date, 'yyyy-MM-dd'), exp.description, categoryName, `$${exp.amount.toFixed(2)}`];
-      }),
-      theme: 'grid',
-    });
-    
-    // Budgets Table
-    finalY = (doc as any).lastAutoTable.finalY;
-    doc.text("Budgets", 14, finalY + 10);
-    doc.autoTable({
-      startY: finalY + 15,
-      head: [['Category', 'Budgeted', 'Spent', 'Remaining']],
-      body: mockBudgets.map(bud => {
-        const remaining = bud.amount - bud.spentAmount;
-        return [bud.categoryName, `$${bud.amount.toFixed(2)}`, `$${bud.spentAmount.toFixed(2)}`, `$${remaining.toFixed(2)}`];
-      }),
-      theme: 'grid',
-    });
-
-    doc.save("budgetwise_data.pdf");
-    toast({
-      title: "PDF Exported",
-      description: "Your data has been downloaded as budgetwise_data.pdf.",
-    });
-  }
 
   const handleImportClick = () => {
     fileInputRef.current?.click();
@@ -243,18 +167,9 @@ export default function SettingsPage() {
           <CardContent className="space-y-4">
             <div className="flex flex-col sm:flex-row gap-4">
                 <div className="flex gap-2 items-center">
-                    <Select value={exportFormat} onValueChange={setExportFormat}>
-                        <SelectTrigger className="w-[120px]">
-                            <SelectValue placeholder="Format" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="json">JSON</SelectItem>
-                            <SelectItem value="pdf">PDF</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <Button variant="outline" onClick={handleExport}>Export Data</Button>
+                    <Button variant="outline" onClick={handleExport}>Export Data as JSON</Button>
                 </div>
-                <Button variant="outline" onClick={handleImportClick}>Import Data</Button>
+                <Button variant="outline" onClick={handleImportClick}>Import Data from JSON</Button>
                 <input 
                   type="file" 
                   ref={fileInputRef} 
