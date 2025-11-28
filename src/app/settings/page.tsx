@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,16 +8,17 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { mockBudgets, mockCategories, mockExpenses } from '@/lib/data';
 
 export default function SettingsPage() {
   const { toast } = useToast();
   const [name, setName] = useState("User Name");
   const [email, setEmail] = useState("user@example.com");
   const [currency, setCurrency] = useState("USD");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleProfileSave = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, you would save this data to a backend.
     console.log("Saving profile:", { name, email });
     toast({
       title: "Profile Saved",
@@ -27,12 +28,69 @@ export default function SettingsPage() {
   
   const handlePreferencesSave = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, you would save this data to a backend.
     console.log("Saving preferences:", { currency });
     toast({
       title: "Preferences Saved",
       description: "Your preferences have been updated.",
     });
+  };
+
+  const handleExport = () => {
+    const dataToExport = {
+      categories: mockCategories,
+      expenses: mockExpenses,
+      budgets: mockBudgets,
+    };
+    const dataStr = JSON.stringify(dataToExport, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "budgetwise_data.json";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast({
+      title: "Data Exported",
+      description: "Your data has been downloaded as budgetwise_data.json.",
+    });
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const importedData = JSON.parse(e.target?.result as string);
+        // Here you would typically validate and update your application state
+        // For this demo, we'll just log it and show a toast.
+        console.log("Imported data:", importedData);
+        toast({
+          title: "Data Import Successful",
+          description: "Your data has been imported. (See console for details)",
+        });
+      } catch (error) {
+        console.error("Failed to parse JSON:", error);
+        toast({
+          variant: "destructive",
+          title: "Import Failed",
+          description: "The selected file is not valid JSON.",
+        });
+      }
+    };
+    reader.readAsText(file);
+
+    // Reset file input
+    if(fileInputRef.current) {
+        fileInputRef.current.value = '';
+    }
   };
 
   return (
@@ -104,8 +162,15 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex gap-4">
-                <Button variant="outline">Export Data</Button>
-                <Button variant="outline">Import Data</Button>
+                <Button variant="outline" onClick={handleExport}>Export Data</Button>
+                <Button variant="outline" onClick={handleImportClick}>Import Data</Button>
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  className="hidden" 
+                  accept="application/json"
+                  onChange={handleFileChange}
+                />
             </div>
           </CardContent>
         </Card>
