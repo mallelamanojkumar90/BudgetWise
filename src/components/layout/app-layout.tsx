@@ -8,14 +8,38 @@ import {
 } from '@/components/ui/sidebar';
 import SidebarNav from './sidebar-nav';
 import { Button } from '@/components/ui/button';
-import { Bell, UserCircle, Wallet } from 'lucide-react';
+import { Bell, UserCircle, Wallet, LogOut } from 'lucide-react';
 import Link from 'next/link';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/firebase';
+import { signOut } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
 
 interface AppLayoutProps {
   children: ReactNode;
 }
 
 export default function AppLayout({ children }: AppLayoutProps) {
+  const auth = useAuth();
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      router.push('/login');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+
   return (
     <SidebarProvider defaultOpen>
       <div className="flex min-h-screen bg-background">
@@ -37,20 +61,31 @@ export default function AppLayout({ children }: AppLayoutProps) {
               <SidebarTrigger className="md:hidden"/>
             </div>
             
-            {/* Optional: Centered element like breadcrumbs or global search for larger screens */}
-            {/* <div className="hidden md:flex md:w-1/3 justify-center">
-              <Input placeholder="Search..." className="max-w-xs"/>
-            </div> */}
-            
             <div className="flex items-center gap-3 md:w-1/3 justify-end">
               <Button variant="ghost" size="icon" className="rounded-full text-foreground/70 hover:text-foreground">
                 <Bell className="h-5 w-5" />
                 <span className="sr-only">Notifications</span>
               </Button>
-              <Button variant="ghost" size="icon" className="rounded-full text-foreground/70 hover:text-foreground">
-                <UserCircle className="h-6 w-6" />
-                <span className="sr-only">User Profile</span>
-              </Button>
+               <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                   <Button variant="ghost" size="icon" className="rounded-full text-foreground/70 hover:text-foreground">
+                    <UserCircle className="h-6 w-6" />
+                    <span className="sr-only">User Profile</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                     <Link href="/settings">Settings</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </header>
           <main className="flex-1 overflow-y-auto p-4 sm:p-6">
