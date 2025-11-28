@@ -46,21 +46,10 @@ export function ExpenseFormDialog({
 
 
   const handleSubmit = (data: any) => {
-    // This is where you would typically handle form submission, e.g., API call
-    // For mock data, we can update a local state or call a prop function
     const newOrUpdatedExpense: Expense = {
       id: expense?.id || `exp${Date.now()}`, // Generate new ID if not editing
       ...data,
     };
-    console.log("Submitting expense:", newOrUpdatedExpense);
-
-    // Example: adding to mockExpenses (this won't persist or re-render table unless table state is managed)
-    if (!expense) {
-      mockExpenses.push(newOrUpdatedExpense);
-    } else {
-      const index = mockExpenses.findIndex(e => e.id === expense.id);
-      if (index !== -1) mockExpenses[index] = newOrUpdatedExpense;
-    }
     
     if (onFormSubmit) {
       onFormSubmit(newOrUpdatedExpense);

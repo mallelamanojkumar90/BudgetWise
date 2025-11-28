@@ -13,10 +13,10 @@ import { ExpenseFormDialog } from './expense-form-dialog'; // For editing
 interface ExpensesTableProps {
   expenses: Expense[];
   categories: Category[];
+  onExpensesChange?: (expenses: Expense[]) => void;
 }
 
-export default function ExpensesTable({ expenses: initialExpenses, categories }: ExpensesTableProps) {
-  const [expenses, setExpenses] = useState<Expense[]>(initialExpenses);
+export default function ExpensesTable({ expenses, categories, onExpensesChange }: ExpensesTableProps) {
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
 
   const getCategoryName = (categoryId: string) => {
@@ -24,9 +24,10 @@ export default function ExpensesTable({ expenses: initialExpenses, categories }:
   };
 
   const handleDelete = (expenseId: string) => {
-    // Mock delete: filter out the expense
-    setExpenses(prevExpenses => prevExpenses.filter(exp => exp.id !== expenseId));
-    // In a real app, this would be an API call / server action
+    const updatedExpenses = expenses.filter(exp => exp.id !== expenseId);
+    if (onExpensesChange) {
+      onExpensesChange(updatedExpenses);
+    }
   };
   
   const handleEdit = (expense: Expense) => {
@@ -34,18 +35,19 @@ export default function ExpensesTable({ expenses: initialExpenses, categories }:
   };
 
   const handleFormSubmit = (updatedExpense: Expense) => {
-    // Mock update: replace or add the expense
-    setExpenses(prevExpenses => {
-      const index = prevExpenses.findIndex(exp => exp.id === updatedExpense.id);
-      if (index > -1) {
-        const newExpenses = [...prevExpenses];
-        newExpenses[index] = updatedExpense;
-        return newExpenses;
-      }
-      // This form is typically for new expenses, but we're reusing for edit dialog state mgmt here
-      // A real app would handle add/edit separately or use a more robust state solution.
-      return [updatedExpense, ...prevExpenses]; 
-    });
+    const index = expenses.findIndex(exp => exp.id === updatedExpense.id);
+    let newExpenses;
+    if (index > -1) {
+      newExpenses = [...expenses];
+      newExpenses[index] = updatedExpense;
+    } else {
+      // This case is for adding, but parent now handles it.
+      // We will just update if found for edits.
+      newExpenses = [updatedExpense, ...expenses];
+    }
+    if (onExpensesChange) {
+      onExpensesChange(newExpenses);
+    }
     setEditingExpense(null); // Close dialog
   };
 
@@ -57,7 +59,7 @@ export default function ExpensesTable({ expenses: initialExpenses, categories }:
           expense={editingExpense}
           open={!!editingExpense}
           onOpenChange={(isOpen) => !isOpen && setEditingExpense(null)}
-          onFormSubmit={handleFormSubmit} // This needs to be passed to the actual form inside dialog
+          onFormSubmit={handleFormSubmit}
         />
       )}
       <Table>

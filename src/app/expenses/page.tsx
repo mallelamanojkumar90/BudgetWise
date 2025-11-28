@@ -1,20 +1,31 @@
+"use client";
+
+import { useState } from 'react';
 import PageHeader from '@/components/page-header';
 import ExpensesTable from './components/expenses-table';
-import { ExpenseFormDialog } from './components/expense-form-dialog'; // Wrapper for dialog
-import { mockCategories, mockExpenses } from '@/lib/data'; // For passing to components
+import { ExpenseFormDialog } from './components/expense-form-dialog';
+import { mockCategories, mockExpenses } from '@/lib/data';
+import type { Expense } from '@/lib/types';
 
 export default function ExpensesPage() {
-  // In a real app, data would be fetched here or managed via context/state library
-  // For now, components might use mock data directly or receive it as props
+  const [expenses, setExpenses] = useState<Expense[]>(mockExpenses);
+
+  const handleAddExpense = (newExpense: Expense) => {
+    setExpenses(prevExpenses => [newExpense, ...prevExpenses].sort((a, b) => b.date.getTime() - a.date.getTime()));
+  };
+  
+  const handleUpdateExpenses = (updatedExpenses: Expense[]) => {
+    setExpenses(updatedExpenses.sort((a, b) => b.date.getTime() - a.date.getTime()));
+  };
 
   return (
     <>
       <PageHeader 
         title="Expenses"
         description="Track and manage your spending."
-        actions={<ExpenseFormDialog categories={mockCategories} />}
+        actions={<ExpenseFormDialog categories={mockCategories} onFormSubmit={handleAddExpense} />}
       />
-      <ExpensesTable expenses={mockExpenses} categories={mockCategories} />
+      <ExpensesTable expenses={expenses} categories={mockCategories} onExpensesChange={handleUpdateExpenses} />
     </>
   );
 }
