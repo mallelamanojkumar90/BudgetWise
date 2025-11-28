@@ -60,10 +60,16 @@ export default function LoginPage() {
       // The AuthProvider will handle redirecting to the dashboard
     } catch (error: any) {
       console.error('Login Error:', error);
+      let description = 'An unexpected error occurred.';
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+        description = 'Invalid email or password. Please try again.';
+      } else {
+        description = error.message;
+      }
       toast({
         variant: 'destructive',
         title: 'Login Failed',
-        description: error.message || 'An unexpected error occurred.',
+        description: description,
       });
     } finally {
       setIsLoading(false);
