@@ -207,22 +207,42 @@ export default function SettingsPage() {
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      try {
-        const importedData = JSON.parse(e.target?.result as string);
-        console.log("Imported data:", importedData);
-        toast({
-          title: "Data Import Successful",
-          description: "Data logged to console. Import to Firestore not yet implemented.",
-        });
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Import Failed",
-          description: "The selected file is not valid JSON.",
-        });
-      }
+        const content = e.target?.result;
+        try {
+            let importedData;
+            if (file.type === "application/json") {
+                importedData = JSON.parse(content as string);
+            } else {
+                // For PDF and CSV, we just log the raw content as a placeholder
+                importedData = content;
+            }
+            console.log("Imported data:", importedData);
+            toast({
+                title: "Data Import Successful",
+                description: `Data from ${file.name} logged to console. Import to Firestore not yet implemented.`,
+            });
+        } catch (error) {
+            toast({
+                variant: "destructive",
+                title: "Import Failed",
+                description: `Could not process the file: ${file.name}.`,
+            });
+        }
     };
-    reader.readAsText(file);
+    
+    if (file.type === "application/json" || file.type === "text/csv") {
+        reader.readAsText(file);
+    } else if (file.type === "application/pdf") {
+        reader.readAsBinaryString(file); // Or as ArrayBuffer
+    } else {
+         toast({
+            variant: "destructive",
+            title: "Unsupported File Type",
+            description: `File type "${file.type}" is not supported for import.`,
+        });
+        return;
+    }
+
 
     if(fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -309,12 +329,12 @@ export default function SettingsPage() {
                         Export Data
                     </Button>
                 </div>
-                <Button variant="outline" onClick={handleImportClick}>Import Data from JSON</Button>
+                <Button variant="outline" onClick={handleImportClick}>Import Data</Button>
                 <input 
                   type="file" 
                   ref={fileInputRef} 
                   className="hidden" 
-                  accept="application/json"
+                  accept="application/json,application/pdf,text/csv"
                   onChange={handleFileChange}
                 />
             </div>
