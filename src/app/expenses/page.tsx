@@ -6,7 +6,7 @@ import ExpensesTable from './components/expenses-table';
 import { ExpenseFormDialog } from './components/expense-form-dialog';
 import type { Expense, Category } from '@/lib/types';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy, Timestamp } from 'firebase/firestore';
+import { collection, query, orderBy, doc, Timestamp } from 'firebase/firestore';
 import { addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Loader2 } from 'lucide-react';
 
@@ -36,7 +36,7 @@ export default function ExpensesPage() {
     addDocumentNonBlocking(collection(firestore, 'users', user.uid, 'expenses'), expenseWithUser);
   };
   
-  const handleUpdateExpense = (updatedExpense: Omit<Expense, 'userId' | 'date'> & { date: Date }) => {
+  const handleUpdateExpense = (updatedExpense: Omit<Expense, 'userId' | 'date'> & { id:string, date: Date }) => {
      if (!user) return;
      const docRef = doc(firestore, 'users', user.uid, 'expenses', updatedExpense.id);
      const dataToUpdate = {

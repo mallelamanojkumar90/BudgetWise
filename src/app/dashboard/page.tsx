@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { PlusCircle, Loader2 } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy, limit, getDocs, Timestamp } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, Timestamp } from 'firebase/firestore';
 import { startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import type { Budget, Category, Expense, BudgetWithSpent } from '@/lib/types';
 

@@ -6,7 +6,7 @@ import BudgetAdherenceChart from './components/budget-adherence-chart';
 import CategoryBreakdownChart from './components/category-breakdown-chart';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, Timestamp } from 'firebase/firestore';
-import { startOfMonth, endOfMonth, subDays } from 'date-fns';
+import { subDays } from 'date-fns';
 import type { Budget, Category, Expense, BudgetWithSpent } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
 
