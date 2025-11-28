@@ -5,7 +5,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 import type { Expense } from '@/lib/types';
 import type { ChartConfig } from "@/components/ui/chart";
-import { format, eachDayOfInterval, subDays } from 'date-fns';
+import { format, eachDayOfInterval } from 'date-fns';
 import { useMemo, useState, useEffect } from "react";
 
 const chartConfig = {
@@ -17,9 +17,10 @@ const chartConfig = {
 
 interface SpendingOverTimeChartProps {
     expenses: Expense[];
+    dateRange: { from: Date, to: Date };
 }
 
-export default function SpendingOverTimeChart({ expenses }: SpendingOverTimeChartProps) {
+export default function SpendingOverTimeChart({ expenses, dateRange }: SpendingOverTimeChartProps) {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -27,9 +28,7 @@ export default function SpendingOverTimeChart({ expenses }: SpendingOverTimeChar
   }, []);
   
   const chartData = useMemo(() => {
-    const endDate = new Date();
-    const startDate = subDays(endDate, 30);
-    const daysInInterval = eachDayOfInterval({ start: startDate, end: endDate });
+    const daysInInterval = eachDayOfInterval({ start: dateRange.from, end: dateRange.to });
 
     const dailySpending = daysInInterval.map(day => {
       const dayStr = format(day, "MMM dd");
@@ -39,14 +38,26 @@ export default function SpendingOverTimeChart({ expenses }: SpendingOverTimeChar
       return { date: dayStr, spending: total };
     });
     return dailySpending;
-  }, [expenses]);
+  }, [expenses, dateRange]);
+
+  const tickFormatter = (value: string) => {
+     if (chartData.length > 31) {
+        // Show only month for longer ranges
+        const month = value.slice(0,3);
+        if(chartData.find(d => d.date === value)?.date.endsWith(" 01")) {
+            return month;
+        }
+        return "";
+     }
+     return value;
+  }
 
   if (!isClient) {
     return (
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle>Spending Over Time</CardTitle>
-          <CardDescription>Daily spending for the last 30 days.</CardDescription>
+          <CardDescription>Daily spending for the selected period.</CardDescription>
         </CardHeader>
         <CardContent className="h-[350px] flex items-center justify-center">
            <p>Loading chart...</p>
@@ -63,7 +74,7 @@ export default function SpendingOverTimeChart({ expenses }: SpendingOverTimeChar
     <Card className="shadow-lg">
       <CardHeader>
         <CardTitle>Spending Over Time</CardTitle>
-        <CardDescription>Daily spending for the last 30 days.</CardDescription>
+        <CardDescription>Daily spending for the selected period.</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[300px] w-full">
@@ -74,7 +85,7 @@ export default function SpendingOverTimeChart({ expenses }: SpendingOverTimeChar
               tickLine={false}
               tickMargin={10}
               axisLine={false}
-              tickFormatter={(value) => value.slice(0, 6)}
+              tickFormatter={tickFormatter}
             />
             <YAxis 
              tickFormatter={(value) => `₹${value}`}
