@@ -266,7 +266,7 @@ export default function SettingsPage() {
               <CardContent className="space-y-4">
                  <div className="space-y-1 max-w-xs">
                   <Label htmlFor="currency">Default Currency</Label>
-                   <Select value={currency} onValueChange={setCurrency}>
+                   <Select value={currency} onValueChange={(value) => setCurrency(value as "INR")}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a currency" />
                     </SelectTrigger>
