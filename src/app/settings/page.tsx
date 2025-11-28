@@ -105,7 +105,7 @@ export default function SettingsPage() {
   
   const exportAsJson = (data: any) => {
      const dataStr = JSON.stringify(data, (key, value) => {
-        if (key === 'date' && value instanceof Date) {
+        if (value instanceof Date) {
             return value.toISOString();
         }
         return value;
