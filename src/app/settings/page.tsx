@@ -13,8 +13,8 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { format } from 'date-fns';
 import JSZip from 'jszip';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, doc, getDocs } from 'firebase/firestore';
+import { useUser, useFirestore } from '@/firebase';
+import { collection, query, getDocs } from 'firebase/firestore';
 import type { Category, Expense, Budget } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
 
@@ -63,7 +63,7 @@ export default function SettingsPage() {
   };
   
   const fetchAllData = async () => {
-    if (!user) return null;
+    if (!user || !firestore) return null;
     const categoriesQuery = query(collection(firestore, 'users', user.uid, 'categories'));
     const expensesQuery = query(collection(firestore, 'users', user.uid, 'expenses'));
     const budgetsQuery = query(collection(firestore, 'users', user.uid, 'budgets'));
@@ -78,7 +78,7 @@ export default function SettingsPage() {
     const expenses = expensesSnap.docs.map(d => {
         const data = d.data();
         return {id: d.id, ...data, date: (data.date as any).toDate() }
-    }) as Expense[];
+    }) as (Omit<Expense, 'date'> & { date: Date })[];
     const budgets = budgetsSnap.docs.map(d => ({id: d.id, ...d.data()})) as Budget[];
     
     return { categories, expenses, budgets };
@@ -125,7 +125,7 @@ export default function SettingsPage() {
     });
   };
 
-   const exportAsPdf = (data: {categories: Category[], expenses: any[], budgets: Budget[]}) => {
+   const exportAsPdf = (data: {categories: Category[], expenses: (Omit<Expense, 'date'> & { date: Date })[], budgets: Budget[]}) => {
     const doc = new jsPDF();
     
     doc.text("BudgetWise Data Export", 14, 16);
@@ -169,7 +169,7 @@ export default function SettingsPage() {
     });
   };
 
-  const exportAsCsv = async (data: {categories: Category[], expenses: any[], budgets: Budget[]}) => {
+  const exportAsCsv = async (data: {categories: Category[], expenses: (Omit<Expense, 'date'> & { date: Date })[], budgets: Budget[]}) => {
     const zip = new JSZip();
 
     const categoriesCsv = "id,name,iconName,userId\n" + data.categories.map(c => `${c.id},${c.name},${c.iconName},${c.userId}`).join("\n");
