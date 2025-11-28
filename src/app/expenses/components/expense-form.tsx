@@ -34,8 +34,8 @@ type ExpenseFormValues = z.infer<typeof expenseFormSchema>;
 interface ExpenseFormProps {
   categories: Category[];
   expense?: Expense | null; // For editing
-  onSubmit: (data: ExpenseFormValues) => void; // Simplified onSubmit for mock data
-  onClose?: () => void; // To close dialog
+  onSubmit: (data: ExpenseFormValues) => void;
+  onClose?: () => void; // To close dialog or navigate back
 }
 
 export default function ExpenseForm({ categories, expense, onSubmit, onClose }: ExpenseFormProps) {
@@ -46,16 +46,23 @@ export default function ExpenseForm({ categories, expense, onSubmit, onClose }: 
       amount: Number(expense.amount) // ensure amount is number
     } : {
       description: "",
-      amount: "" as any, // Use empty string for controlled input
+      amount: "" as any,
       categoryId: "",
       date: new Date(),
     },
   });
 
   const handleSubmit = (data: ExpenseFormValues) => {
-    onSubmit(data); // Pass validated data
-    if (onClose) onClose();
-    if (!expense) form.reset(); // Reset form if it was for new expense
+    onSubmit(data);
+    if (!expense) {
+        // Reset form for new expense, but not for edits to avoid flashing
+        form.reset({
+            description: "",
+            amount: "" as any,
+            categoryId: "",
+            date: new Date(),
+        });
+    }
   };
 
   return (
