@@ -20,6 +20,7 @@
  * - Prototyping Flexibility: These rules strictly control *who* can access data
  *   but are intentionally flexible about the *shape* of that data. Apart from
  *   critical authorization fields (`userId`, `id`), no other schema fields are
+
  *   validated, allowing for rapid front-end development and iteration.
  */
 rules_version = '2';
@@ -165,6 +166,28 @@ service cloud.firestore {
         allow update: if isExistingOwner(userId) && hasImmutableOwnerIdOnUpdate();
         allow delete: if isExistingOwner(userId);
       }
+
+      // -----------------------------------------------------------------------
+      // Subcollection Rules: /users/{userId}/notifications
+      // -----------------------------------------------------------------------
+
+      /**
+       * @description Secures user-specific notification documents. Only the owner
+       *  can read, create, or update their own notifications.
+       * @path /users/{userId}/notifications/{notificationId}
+       * @allow (auth.uid == 'user_abc') to (list) documents in `/users/user_abc/notifications`.
+       * @deny (auth.uid == 'user_xyz') to (delete) a document at `/users/user_abc/notifications/notif_123`.
+       * @principle Enforces strict ownership for all data within a user's subcollection.
+       */
+      match /notifications/{notificationId} {
+        allow get, list: if isOwner(userId);
+        
+        allow create: if isOwner(userId) && hasValidOwnerIdOnCreate(userId);
+        allow update: if isExistingOwner(userId) && hasImmutableOwnerIdOnUpdate();
+        allow delete: if isExistingOwner(userId); // Allow users to delete their own notifications
+      }
     }
   }
 }
+
+    

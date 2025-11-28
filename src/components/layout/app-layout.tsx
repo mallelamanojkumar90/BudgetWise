@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/sidebar';
 import SidebarNav from './sidebar-nav';
 import { Button } from '@/components/ui/button';
-import { Bell, UserCircle, Wallet, LogOut } from 'lucide-react';
+import { Bell, UserCircle, Wallet, LogOut, Circle } from 'lucide-react';
 import Link from 'next/link';
 import {
   DropdownMenu,
@@ -18,10 +18,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useAuth } from '@/firebase';
+import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import NotificationList from './notification-list';
+import { query, collection, where } from 'firebase/firestore';
+import type { Notification } from '@/lib/types';
+
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -29,6 +32,8 @@ interface AppLayoutProps {
 
 export default function AppLayout({ children }: AppLayoutProps) {
   const auth = useAuth();
+  const { user } = useUser();
+  const firestore = useFirestore();
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -39,6 +44,16 @@ export default function AppLayout({ children }: AppLayoutProps) {
       console.error('Error signing out:', error);
     }
   };
+
+  const unreadNotificationsQuery = useMemoFirebase(() => 
+    user ? query(
+        collection(firestore, 'users', user.uid, 'notifications'), 
+        where('read', '==', false)
+    ) : null,
+    [firestore, user]
+  );
+  const { data: unreadNotifications } = useCollection<Notification>(unreadNotificationsQuery);
+  const hasUnread = (unreadNotifications?.length || 0) > 0;
 
 
   return (
@@ -65,14 +80,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
             <div className="flex items-center gap-3 md:w-1/3 justify-end">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full text-foreground/70 hover:text-foreground">
+                  <Button variant="ghost" size="icon" className="rounded-full text-foreground/70 hover:text-foreground relative">
                     <Bell className="h-5 w-5" />
+                    {hasUnread && <Circle className="absolute top-2 right-2 h-2 w-2 fill-destructive text-destructive" />}
                     <span className="sr-only">Notifications</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-80">
-                  <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
+                <DropdownMenuContent align="end" className="w-96">
                   <NotificationList />
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -107,3 +121,5 @@ export default function AppLayout({ children }: AppLayoutProps) {
     </SidebarProvider>
   );
 }
+
+    

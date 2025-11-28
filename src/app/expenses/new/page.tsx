@@ -3,12 +3,13 @@
 import { useRouter } from 'next/navigation';
 import PageHeader from '@/components/page-header';
 import ExpenseForm from '../components/expense-form';
-import type { Category } from '@/lib/types';
+import type { Category, Expense } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, Timestamp, addDoc } from 'firebase/firestore';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Loader2 } from 'lucide-react';
+import { checkAndCreateBudgetWarning } from '@/lib/notifications';
 
 export default function NewExpensePage() {
   const router = useRouter();
@@ -24,7 +25,7 @@ export default function NewExpensePage() {
   const handleSubmit = (data: { description: string; amount: number; categoryId: string; date: Date }) => {
     if (!user) return;
     
-    const newExpense = {
+    const newExpense: Omit<Expense, 'id'> = {
       ...data,
       userId: user.uid,
       date: Timestamp.fromDate(data.date),
@@ -32,6 +33,9 @@ export default function NewExpensePage() {
     
     addDocumentNonBlocking(collection(firestore, 'users', user.uid, 'expenses'), newExpense);
     
+    // After adding, check if a notification should be created
+    checkAndCreateBudgetWarning(firestore, user.uid, newExpense);
+
     router.push('/expenses');
   };
 
@@ -63,3 +67,5 @@ export default function NewExpensePage() {
     </>
   );
 }
+
+    

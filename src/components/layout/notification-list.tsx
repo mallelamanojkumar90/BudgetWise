@@ -1,33 +1,116 @@
-"use client"
+"use client";
 
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Link from 'next/link';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { query, collection, orderBy, doc, writeBatch } from 'firebase/firestore';
+import type { Notification } from '@/lib/types';
+import { DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Bell, AlertCircle, Check } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
-const mockNotifications = [
-    { id: 1, user: 'John Doe', message: 'added a new expense for "Groceries".', time: '5m ago', avatar: '/avatars/01.png' },
-    { id: 2, user: 'System', message: 'Your "Utilities" budget is 90% utilized.', time: '1h ago', avatar: '/avatars/system.png' },
-    { id: 3, user: 'Jane Smith', message: 'updated the "Transportation" budget.', time: '3h ago', avatar: '/avatars/02.png' },
-    { id: 4, user: 'System', message: 'A new report for May 2024 is available.', time: '1d ago', avatar: '/avatars/system.png' },
-];
 
 export default function NotificationList() {
+    const { user } = useUser();
+    const firestore = useFirestore();
+
+    const notificationsQuery = useMemoFirebase(() => 
+        user ? query(collection(firestore, 'users', user.uid, 'notifications'), orderBy('createdAt', 'desc')) : null,
+        [firestore, user]
+    );
+    const { data: notifications } = useCollection<Notification>(notificationsQuery);
+
+    const handleMarkAsRead = (notificationId: string) => {
+        if (!user) return;
+        const notifRef = doc(firestore, 'users', user.uid, 'notifications', notificationId);
+        updateDocumentNonBlocking(notifRef, { read: true });
+    };
+
+    const handleClearRead = async () => {
+        if (!user || !notifications) return;
+        const batch = writeBatch(firestore);
+        notifications.filter(n => n.read).forEach(n => {
+            const notifRef = doc(firestore, 'users', user.uid, 'notifications', n.id);
+            batch.delete(notifRef);
+        });
+        await batch.commit();
+    };
+
+    const unreadCount = notifications?.filter(n => !n.read).length || 0;
+    const readCount = notifications?.filter(n => n.read).length || 0;
+
+    const renderNotification = (notification: Notification) => {
+         const Icon = notification.type === 'budget_warning' ? AlertCircle : Bell;
+         const itemContent = (
+             <div className="flex items-start gap-3 p-2">
+                <Icon className={cn("h-5 w-5 mt-1 shrink-0", { "text-amber-500": notification.type === 'budget_warning' })} />
+                <div className="flex flex-col">
+                    <p className="text-sm leading-snug text-wrap">
+                        {notification.message}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                        {formatDistanceToNow(notification.createdAt.toDate(), { addSuffix: true })}
+                    </p>
+                </div>
+             </div>
+         );
+
+        const Wrapper = notification.link ? Link : 'div';
+
+        return (
+            <DropdownMenuItem 
+                key={notification.id} 
+                className={cn("flex items-start gap-3 p-0 data-[focus]:bg-accent/50 cursor-pointer", !notification.read && "bg-accent/30")}
+                onClick={() => !notification.read && handleMarkAsRead(notification.id)}
+            >
+                <Wrapper href={notification.link || '#'} className="w-full">
+                    {itemContent}
+                </Wrapper>
+            </DropdownMenuItem>
+        )
+    }
+
     return (
         <>
-            {mockNotifications.map(notification => (
-                <DropdownMenuItem key={notification.id} className="flex items-start gap-3 p-3 cursor-pointer">
-                    <Avatar className="h-8 w-8">
-                        {/* In a real app, you would use next/image */}
-                        <AvatarImage src={`https://i.pravatar.cc/40?u=${notification.user}`} alt={notification.user} />
-                        <AvatarFallback>{notification.user.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col">
-                        <p className="text-sm leading-snug text-wrap">
-                            <span className="font-semibold">{notification.user}</span> {notification.message}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">{notification.time}</p>
+            <DropdownMenuLabel className="flex justify-between items-center">
+                <span>Notifications</span>
+                {readCount > 0 && (
+                    <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={handleClearRead}>
+                        Clear Read
+                    </Button>
+                )}
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <ScrollArea className="h-[300px]">
+                {notifications && notifications.length > 0 ? (
+                    <>
+                        {unreadCount > 0 && (
+                           <>
+                            <p className="text-xs font-medium text-muted-foreground px-3 py-1">Unread</p>
+                            {notifications.filter(n => !n.read).map(renderNotification)}
+                           </>
+                        )}
+                         {readCount > 0 && unreadCount > 0 && <DropdownMenuSeparator className="my-2" />}
+                         {readCount > 0 && (
+                           <>
+                            <p className="text-xs font-medium text-muted-foreground px-3 py-1">Read</p>
+                            {notifications.filter(n => n.read).map(renderNotification)}
+                           </>
+                        )}
+                    </>
+                ) : (
+                    <div className="flex flex-col items-center justify-center text-center p-8 text-muted-foreground">
+                        <Check className="h-8 w-8 mb-2" />
+                        <p className="text-sm font-medium">You're all caught up!</p>
+                        <p className="text-xs">No new notifications.</p>
                     </div>
-                </DropdownMenuItem>
-            ))}
+                )}
+            </ScrollArea>
         </>
     );
 }
+
+    

@@ -9,6 +9,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { collection, query, orderBy, doc, Timestamp } from 'firebase/firestore';
 import { addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Loader2 } from 'lucide-react';
+import { checkAndCreateBudgetWarning } from '@/lib/notifications';
 
 export default function ExpensesPage() {
   const { user } = useUser();
@@ -34,6 +35,9 @@ export default function ExpensesPage() {
       date: Timestamp.fromDate(newExpenseData.date),
     };
     addDocumentNonBlocking(collection(firestore, 'users', user.uid, 'expenses'), expenseWithUser);
+
+    // After adding, check if a notification should be created
+    checkAndCreateBudgetWarning(firestore, user.uid, expenseWithUser);
   };
   
   const handleUpdateExpense = (updatedExpense: Omit<Expense, 'userId' | 'date'> & { id:string, date: Date }) => {
@@ -44,6 +48,9 @@ export default function ExpensesPage() {
         date: Timestamp.fromDate(updatedExpense.date)
      };
      updateDocumentNonBlocking(docRef, dataToUpdate);
+
+     // Also check for notifications on update
+     checkAndCreateBudgetWarning(firestore, user.uid, dataToUpdate);
   };
 
   const handleDeleteExpense = (expenseId: string) => {
@@ -76,3 +83,5 @@ export default function ExpensesPage() {
     </>
   );
 }
+
+    
