@@ -1,12 +1,9 @@
-
 "use client";
-// This component is very similar to the dashboard's SpendingByCategoryChart
-// but could be adapted for more detailed reporting options in the future (e.g., date range selection)
 
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 import { PieChart, Pie, Cell } from "recharts";
-import { mockExpenses, mockCategories } from '@/lib/data';
+import type { Expense, Category } from '@/lib/types';
 import type { ChartConfig } from "@/components/ui/chart";
 import { useMemo, useState, useEffect } from "react";
 import * as LucideIcons from 'lucide-react';
@@ -24,7 +21,12 @@ const chartColors = [
   "hsl(120, 40%, 60%)",
 ];
 
-export default function CategoryBreakdownChart() {
+interface CategoryBreakdownChartProps {
+    expenses: Expense[];
+    categories: Category[];
+}
+
+export default function CategoryBreakdownChart({ expenses, categories }: CategoryBreakdownChartProps) {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -33,16 +35,16 @@ export default function CategoryBreakdownChart() {
 
   const { chartData, chartConfig } = useMemo(() => {
     const spendingByCategory: { [key: string]: number } = {};
-    mockExpenses.forEach(expense => {
+    expenses.forEach(expense => {
       spendingByCategory[expense.categoryId] = (spendingByCategory[expense.categoryId] || 0) + expense.amount;
     });
 
-    const data = mockCategories
+    const data = (categories || [])
       .map((category, index) => ({
         name: category.name,
         value: spendingByCategory[category.id] || 0,
         fill: chartColors[index % chartColors.length],
-        iconName: category.iconName, // Store iconName
+        iconName: category.iconName,
       }))
       .filter(item => item.value > 0)
       .sort((a, b) => b.value - a.value);
@@ -53,11 +55,11 @@ export default function CategoryBreakdownChart() {
       config[item.name] = {
         label: item.name,
         color: item.fill,
-        icon: IconComponent, // Look up the component
+        icon: IconComponent,
       };
     });
     return { chartData: data, chartConfig: config };
-  }, []);
+  }, [expenses, categories]);
   
 
   if (!isClient) {
@@ -112,11 +114,10 @@ export default function CategoryBreakdownChart() {
               data={chartData}
               dataKey="value"
               nameKey="name"
-              innerRadius={80} // Larger inner radius for a "doughnut" look
+              innerRadius={80}
               outerRadius={140}
               strokeWidth={2}
               labelLine={false}
-              // label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`} // Optional labels
             >
               {chartData.map((entry) => (
                 <Cell key={`cell-${entry.name}`} fill={entry.fill} />

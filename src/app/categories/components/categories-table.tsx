@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -11,27 +11,24 @@ import * as LucideIcons from 'lucide-react';
 
 interface CategoriesTableProps {
   categories: Category[];
-  onCategoriesChange: (categories: Category[]) => void;
+  onUpdate: (category: Omit<Category, 'userId'>) => void;
+  onDelete: (categoryId: string) => void;
 }
 
-export default function CategoriesTable({ categories, onCategoriesChange }: CategoriesTableProps) {
+export default function CategoriesTable({ categories, onUpdate, onDelete }: CategoriesTableProps) {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-
-  const handleDelete = (categoryId: string) => {
-    const updatedCategories = categories.filter(cat => cat.id !== categoryId);
-    onCategoriesChange(updatedCategories);
-  };
 
   const handleEdit = (category: Category) => {
     setEditingCategory(category);
   };
   
-  const handleFormSubmit = (updatedCategory: Category) => {
-    const index = categories.findIndex(c => c.id === updatedCategory.id);
-    if (index > -1) {
-      const newCategories = [...categories];
-      newCategories[index] = updatedCategory;
-      onCategoriesChange(newCategories);
+  const handleFormSubmit = (data: { name: string; icon: keyof typeof LucideIcons }) => {
+    if (editingCategory) {
+        onUpdate({
+            id: editingCategory.id,
+            name: data.name,
+            iconName: data.icon,
+        });
     }
     setEditingCategory(null);
   };
@@ -76,7 +73,7 @@ export default function CategoriesTable({ categories, onCategoriesChange }: Cate
                         Edit
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => handleDelete(category.id)} className="text-red-600 focus:text-red-600 focus:bg-red-50">
+                      <DropdownMenuItem onClick={() => onDelete(category.id)} className="text-red-600 focus:text-red-600 focus:bg-red-50">
                         <Trash2 className="mr-2 h-4 w-4" />
                         Delete
                       </DropdownMenuItem>

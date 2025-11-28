@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -16,11 +16,11 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { Category, Expense } from "@/lib/types";
+import type { Category } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
-import { Textarea } from "@/components/ui/textarea"; // Using textarea for description
+import { Textarea } from "@/components/ui/textarea";
 
 const expenseFormSchema = z.object({
   description: z.string().min(2, { message: "Description must be at least 2 characters." }).max(100, { message: "Description must be at most 100 characters." }),
@@ -33,9 +33,14 @@ type ExpenseFormValues = z.infer<typeof expenseFormSchema>;
 
 interface ExpenseFormProps {
   categories: Category[];
-  expense?: Expense | null; // For editing
+  expense?: {
+    description: string;
+    amount: number;
+    categoryId: string;
+    date: Date;
+  } | null;
   onSubmit: (data: ExpenseFormValues) => void;
-  onClose?: () => void; // To close dialog or navigate back
+  onClose?: () => void;
 }
 
 export default function ExpenseForm({ categories, expense, onSubmit, onClose }: ExpenseFormProps) {
@@ -43,7 +48,7 @@ export default function ExpenseForm({ categories, expense, onSubmit, onClose }: 
     resolver: zodResolver(expenseFormSchema),
     defaultValues: expense ? {
       ...expense,
-      amount: Number(expense.amount) // ensure amount is number
+      amount: Number(expense.amount)
     } : {
       description: "",
       amount: "" as any,
@@ -55,7 +60,6 @@ export default function ExpenseForm({ categories, expense, onSubmit, onClose }: 
   const handleSubmit = (data: ExpenseFormValues) => {
     onSubmit(data);
     if (!expense) {
-        // Reset form for new expense, but not for edits to avoid flashing
         form.reset({
             description: "",
             amount: "" as any,

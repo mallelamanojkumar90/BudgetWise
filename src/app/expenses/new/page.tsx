@@ -1,28 +1,53 @@
-"use client";
+'use client';
 
 import { useRouter } from 'next/navigation';
 import PageHeader from '@/components/page-header';
 import ExpenseForm from '../components/expense-form';
-import { mockCategories, mockExpenses } from '@/lib/data';
-import type { Expense } from '@/lib/types';
+import type { Category } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where, Timestamp, addDoc } from 'firebase/firestore';
+import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { Loader2 } from 'lucide-react';
 
 export default function NewExpensePage() {
   const router = useRouter();
+  const { user } = useUser();
+  const firestore = useFirestore();
 
-  const handleSubmit = (data: Omit<Expense, 'id'>) => {
-    const newExpense: Expense = {
-      id: `exp${Date.now()}`,
+  const categoriesQuery = useMemoFirebase(() => 
+    user ? query(collection(firestore, 'users', user.uid, 'categories')) : null, 
+    [firestore, user]
+  );
+  const { data: categories, isLoading } = useCollection<Category>(categoriesQuery);
+
+  const handleSubmit = (data: { description: string; amount: number; categoryId: string; date: Date }) => {
+    if (!user) return;
+    
+    const newExpense = {
       ...data,
+      userId: user.uid,
+      date: Timestamp.fromDate(data.date),
     };
     
-    // In a real app, this would be an API call.
-    // Here we're just adding to the mock data array.
-    mockExpenses.unshift(newExpense); 
+    addDocumentNonBlocking(collection(firestore, 'users', user.uid, 'expenses'), newExpense);
     
-    // Redirect to the expenses page to see the new entry
     router.push('/expenses');
   };
+
+  if (isLoading) {
+    return (
+      <>
+        <PageHeader
+          title="Add New Expense"
+          description="Fill in the details of your new expense."
+        />
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -32,7 +57,7 @@ export default function NewExpensePage() {
       />
       <Card>
         <CardContent className="p-6">
-          <ExpenseForm categories={mockCategories} onSubmit={handleSubmit} onClose={() => router.back()} />
+          <ExpenseForm categories={categories || []} onSubmit={handleSubmit} onClose={() => router.back()} />
         </CardContent>
       </Card>
     </>

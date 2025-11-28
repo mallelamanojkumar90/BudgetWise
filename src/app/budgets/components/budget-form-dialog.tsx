@@ -19,7 +19,7 @@ interface BudgetFormDialogProps {
   budget?: Budget | null;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  onFormSubmit?: (budget: Omit<Budget, 'spentAmount' | 'period'>) => void;
+  onFormSubmit: (data: { categoryId: string, amount: number }) => void;
 }
 
 export function BudgetFormDialog({ 
@@ -40,16 +40,7 @@ export function BudgetFormDialog({
   }, [controlledOpen]);
 
   const handleSubmit = (data: { categoryId: string, amount: number }) => {
-    const newOrUpdatedBudget: Omit<Budget, 'spentAmount' | 'period'> = {
-      id: budget?.id || `bud${Date.now()}`,
-      categoryId: data.categoryId,
-      amount: data.amount,
-      categoryName: categories.find(c => c.id === data.categoryId)?.name,
-    };
-
-    if(onFormSubmit) {
-      onFormSubmit(newOrUpdatedBudget as Budget);
-    }
+    onFormSubmit(data);
     setIsOpen(false);
   };
 
@@ -57,7 +48,7 @@ export function BudgetFormDialog({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       {!budget && (
         <DialogTrigger asChild>
-          <Button>
+          <Button disabled={categories.length === 0}>
             <PlusCircle className="mr-2 h-4 w-4" />
             Set New Budget
           </Button>
@@ -67,10 +58,12 @@ export function BudgetFormDialog({
         <DialogHeader>
           <DialogTitle>{budget ? "Edit Budget" : "Set New Budget Goal"}</DialogTitle>
           <DialogDescription>
-            {budget ? "Update the details for this budget." : "Define a new monthly budget for a category."}
+            {budget ? "Update the details for this budget." : categories.length === 0 ? "You must create a category before setting a budget." : "Define a new monthly budget for a category."}
           </DialogDescription>
         </DialogHeader>
-        <BudgetForm categories={categories} budget={budget} onSubmit={handleSubmit} onClose={() => setIsOpen(false)} />
+        {categories.length > 0 || budget ? (
+            <BudgetForm categories={categories} budget={budget} onSubmit={handleSubmit} onClose={() => setIsOpen(false)} />
+        ) : null}
       </DialogContent>
     </Dialog>
   );

@@ -2,23 +2,28 @@
 
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { mockBudgets, mockCategories } from '@/lib/data';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer } from "recharts";
+import type { BudgetWithSpent, Category } from '@/lib/types';
 import type { ChartConfig } from "@/components/ui/chart";
 import { useMemo, useState, useEffect } from "react";
 
 const chartConfig = {
   budgeted: {
     label: "Budgeted",
-    color: "hsl(var(--chart-2))", // Use accent or a secondary chart color
+    color: "hsl(var(--chart-2))",
   },
   spent: {
     label: "Spent",
-    color: "hsl(var(--chart-1))", // Use primary chart color
+    color: "hsl(var(--chart-1))",
   },
 } satisfies ChartConfig;
 
-export default function BudgetAdherenceChart() {
+interface BudgetAdherenceChartProps {
+    budgets: BudgetWithSpent[];
+    categories: Category[];
+}
+
+export default function BudgetAdherenceChart({ budgets, categories }: BudgetAdherenceChartProps) {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -26,15 +31,15 @@ export default function BudgetAdherenceChart() {
   }, []);
 
   const chartData = useMemo(() => {
-    return mockBudgets.map(budget => {
-      const category = mockCategories.find(cat => cat.id === budget.categoryId);
+    return budgets.map(budget => {
+      const category = categories.find(cat => cat.id === budget.categoryId);
       return {
-        name: category?.name.substring(0,15) || "Unknown", // Shorten name for axis
+        name: category?.name.substring(0,15) || "Unknown",
         budgeted: budget.amount,
         spent: budget.spentAmount,
       };
-    }).filter(b => b.budgeted > 0 || b.spent > 0); // Only show relevant budgets
-  }, []);
+    }).filter(b => b.budgeted > 0 || b.spent > 0);
+  }, [budgets, categories]);
 
   if (!isClient) {
      return (
@@ -69,7 +74,6 @@ export default function BudgetAdherenceChart() {
       </Card>
     );
   }
-
 
   return (
     <Card className="shadow-lg">

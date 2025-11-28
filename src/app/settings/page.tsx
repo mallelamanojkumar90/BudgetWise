@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,11 +8,14 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { mockBudgets, mockCategories, mockExpenses } from '@/lib/data';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { format } from 'date-fns';
 import JSZip from 'jszip';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, doc, getDocs } from 'firebase/firestore';
+import type { Category, Expense, Budget } from '@/lib/types';
+import { Loader2 } from 'lucide-react';
 
 
 declare module 'jspdf' {
@@ -25,15 +28,24 @@ type ExportFormat = 'json' | 'pdf' | 'csv';
 
 export default function SettingsPage() {
   const { toast } = useToast();
-  const [name, setName] = useState("User Name");
-  const [email, setEmail] = useState("user@example.com");
+  const { user } = useUser();
+  const firestore = useFirestore();
+  
+  const [name, setName] = useState("User Name"); // Placeholder
+  const [email, setEmail] = useState(user?.email || "user@example.com");
   const [currency, setCurrency] = useState("USD");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [exportFormat, setExportFormat] = useState<ExportFormat>('json');
+  const [isExporting, setIsExporting] = useState(false);
+
+  useEffect(() => {
+    if(user?.displayName) setName(user.displayName);
+    if(user?.email) setEmail(user.email);
+  }, [user]);
 
   const handleProfileSave = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Saving profile:", { name, email });
+    // In a real app, you would update the user profile in Firebase Auth
     toast({
       title: "Profile Saved",
       description: "Your profile information has been updated.",
@@ -42,30 +54,61 @@ export default function SettingsPage() {
   
   const handlePreferencesSave = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Saving preferences:", { currency });
+    // In a real app, you would save these preferences to Firestore
     toast({
       title: "Preferences Saved",
       description: "Your preferences have been updated.",
     });
   };
+  
+  const fetchAllData = async () => {
+    if (!user) return null;
+    const categoriesQuery = query(collection(firestore, 'users', user.uid, 'categories'));
+    const expensesQuery = query(collection(firestore, 'users', user.uid, 'expenses'));
+    const budgetsQuery = query(collection(firestore, 'users', user.uid, 'budgets'));
 
-  const handleExport = () => {
-    if (exportFormat === 'json') {
-      exportAsJson();
-    } else if (exportFormat === 'pdf') {
-      exportAsPdf();
-    } else if (exportFormat === 'csv') {
-      exportAsCsv();
+    const [categoriesSnap, expensesSnap, budgetsSnap] = await Promise.all([
+        getDocs(categoriesQuery),
+        getDocs(expensesQuery),
+        getDocs(budgetsQuery),
+    ]);
+
+    const categories = categoriesSnap.docs.map(d => ({id: d.id, ...d.data()})) as Category[];
+    const expenses = expensesSnap.docs.map(d => {
+        const data = d.data();
+        return {id: d.id, ...data, date: (data.date as any).toDate() }
+    }) as Expense[];
+    const budgets = budgetsSnap.docs.map(d => ({id: d.id, ...d.data()})) as Budget[];
+    
+    return { categories, expenses, budgets };
+  }
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    const data = await fetchAllData();
+    if (!data) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch data to export.' });
+        setIsExporting(false);
+        return;
     }
-  };
 
-  const exportAsJson = () => {
-     const dataToExport = {
-      categories: mockCategories,
-      expenses: mockExpenses,
-      budgets: mockBudgets,
-    };
-    const dataStr = JSON.stringify(dataToExport, null, 2);
+    if (exportFormat === 'json') {
+      exportAsJson(data);
+    } else if (exportFormat === 'pdf') {
+      exportAsPdf(data);
+    } else if (exportFormat === 'csv') {
+      await exportAsCsv(data);
+    }
+    setIsExporting(false);
+  };
+  
+  const exportAsJson = (data: any) => {
+     const dataStr = JSON.stringify(data, (key, value) => {
+        if (key === 'date' && value instanceof Date) {
+            return value.toISOString();
+        }
+        return value;
+     }, 2);
     const blob = new Blob([dataStr], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -81,48 +124,41 @@ export default function SettingsPage() {
     });
   };
 
-   const exportAsPdf = () => {
+   const exportAsPdf = (data: {categories: Category[], expenses: any[], budgets: Budget[]}) => {
     const doc = new jsPDF();
     
-    // Title
     doc.text("BudgetWise Data Export", 14, 16);
     doc.setFontSize(12);
 
-    // Categories
     doc.autoTable({
       startY: 22,
       head: [['Categories']],
-      body: [[]],
       theme: 'plain',
       styles: { fontStyle: 'bold' }
     });
     doc.autoTable({
       head: [['ID', 'Name', 'Icon']],
-      body: mockCategories.map(c => [c.id, c.name, c.iconName]),
+      body: data.categories.map(c => [c.id, c.name, c.iconName]),
     });
 
-    // Expenses
     doc.autoTable({
       head: [['Expenses']],
-      body: [[]],
       theme: 'plain',
       styles: { fontStyle: 'bold' }
     });
     doc.autoTable({
       head: [['ID', 'Description', 'Amount', 'Category ID', 'Date']],
-      body: mockExpenses.map(e => [e.id, e.description, `$${e.amount.toFixed(2)}`, e.categoryId, format(e.date, 'yyyy-MM-dd')]),
+      body: data.expenses.map(e => [e.id, e.description, `$${e.amount.toFixed(2)}`, e.categoryId, format(e.date, 'yyyy-MM-dd')]),
     });
 
-    // Budgets
-     doc.autoTable({
+    doc.autoTable({
       head: [['Budgets']],
-      body: [[]],
       theme: 'plain',
       styles: { fontStyle: 'bold' }
     });
     doc.autoTable({
-      head: [['ID', 'Category', 'Budgeted', 'Spent', 'Period']],
-      body: mockBudgets.map(b => [b.id, b.categoryName, `$${b.amount.toFixed(2)}`, `$${b.spentAmount.toFixed(2)}`, b.period]),
+      head: [['ID', 'Category ID', 'Amount']],
+      body: data.budgets.map(b => [b.id, b.categoryId, `$${b.amount.toFixed(2)}`]),
     });
 
     doc.save('budgetwise_data.pdf');
@@ -132,19 +168,16 @@ export default function SettingsPage() {
     });
   };
 
-  const exportAsCsv = async () => {
+  const exportAsCsv = async (data: {categories: Category[], expenses: any[], budgets: Budget[]}) => {
     const zip = new JSZip();
 
-    // Categories
-    const categoriesCsv = "id,name,iconName\n" + mockCategories.map(c => `${c.id},${c.name},${c.iconName}`).join("\n");
+    const categoriesCsv = "id,name,iconName,userId\n" + data.categories.map(c => `${c.id},${c.name},${c.iconName},${c.userId}`).join("\n");
     zip.file("categories.csv", categoriesCsv);
 
-    // Expenses
-    const expensesCsv = "id,description,amount,categoryId,date\n" + mockExpenses.map(e => `${e.id},"${e.description}",${e.amount},${e.categoryId},${format(e.date, 'yyyy-MM-dd')}`).join("\n");
+    const expensesCsv = "id,description,amount,categoryId,date,userId\n" + data.expenses.map(e => `${e.id},"${e.description}",${e.amount},${e.categoryId},${format(e.date, 'yyyy-MM-dd')},${e.userId}`).join("\n");
     zip.file("expenses.csv", expensesCsv);
 
-    // Budgets
-    const budgetsCsv = "id,categoryId,categoryName,amount,spentAmount,period\n" + mockBudgets.map(b => `${b.id},${b.categoryId},${b.categoryName},${b.amount},${b.spentAmount},${b.period}`).join("\n");
+    const budgetsCsv = "id,categoryId,amount,userId\n" + data.budgets.map(b => `${b.id},${b.categoryId},${b.amount},${b.userId}`).join("\n");
     zip.file("budgets.csv", budgetsCsv);
 
     const zipBlob = await zip.generateAsync({ type: 'blob' });
@@ -175,15 +208,12 @@ export default function SettingsPage() {
     reader.onload = (e) => {
       try {
         const importedData = JSON.parse(e.target?.result as string);
-        // Here you would typically validate and update your application state
-        // For this demo, we'll just log it and show a toast.
         console.log("Imported data:", importedData);
         toast({
           title: "Data Import Successful",
-          description: "Your data has been imported. (See console for details)",
+          description: "Data logged to console. Import to Firestore not yet implemented.",
         });
       } catch (error) {
-        console.error("Failed to parse JSON:", error);
         toast({
           variant: "destructive",
           title: "Import Failed",
@@ -193,7 +223,6 @@ export default function SettingsPage() {
     };
     reader.readAsText(file);
 
-    // Reset file input
     if(fileInputRef.current) {
         fileInputRef.current.value = '';
     }
@@ -216,14 +245,13 @@ export default function SettingsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <Label htmlFor="name">Name</Label>
-                  <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+                  <Input id="name" value={name} onChange={(e) => setName(e.target.value)} disabled />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} disabled />
                 </div>
               </div>
-              <Button type="submit">Save Profile</Button>
             </CardContent>
           </Card>
         </form>
@@ -252,10 +280,6 @@ export default function SettingsPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                 <div className="space-y-1">
-                  <Label htmlFor="notifications">Notifications</Label>
-                  <p className="text-sm text-muted-foreground">Manage notification settings (UI placeholder).</p>
-                </div>
                 <Button type="submit">Save Preferences</Button>
               </CardContent>
             </Card>
@@ -279,7 +303,10 @@ export default function SettingsPage() {
                             <SelectItem value="csv">CSV (zip)</SelectItem>
                         </SelectContent>
                     </Select>
-                    <Button variant="outline" onClick={handleExport}>Export Data</Button>
+                    <Button variant="outline" onClick={handleExport} disabled={isExporting}>
+                        {isExporting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Export Data
+                    </Button>
                 </div>
                 <Button variant="outline" onClick={handleImportClick}>Import Data from JSON</Button>
                 <input 
@@ -290,6 +317,9 @@ export default function SettingsPage() {
                   onChange={handleFileChange}
                 />
             </div>
+             <p className="text-xs text-muted-foreground">
+                Note: Import functionality is for demonstration and logs data to the console.
+             </p>
           </CardContent>
         </Card>
       </div>

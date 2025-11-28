@@ -5,39 +5,32 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import type { Budget, Category } from '@/lib/types';
+import type { BudgetWithSpent, Category, Budget } from '@/lib/types';
 import { MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import { BudgetFormDialog } from './budget-form-dialog';
 import * as LucideIcons from 'lucide-react';
 
 interface BudgetsTableProps {
-  budgets: Budget[];
+  budgets: BudgetWithSpent[];
   categories: Category[];
-  onBudgetsChange: (budgets: Budget[]) => void;
+  onUpdate: (budget: Omit<Budget, 'userId'>) => void;
+  onDelete: (budgetId: string) => void;
 }
 
-export default function BudgetsTable({ budgets, categories, onBudgetsChange }: BudgetsTableProps) {
-  const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
+export default function BudgetsTable({ budgets, categories, onUpdate, onDelete }: BudgetsTableProps) {
+  const [editingBudget, setEditingBudget] = useState<BudgetWithSpent | null>(null);
 
   const getCategoryInfo = (categoryId: string): Category | undefined => {
     return categories.find(cat => cat.id === categoryId);
   };
 
-  const handleDelete = (budgetId: string) => {
-    const updatedBudgets = budgets.filter(b => b.id !== budgetId);
-    onBudgetsChange(updatedBudgets);
-  };
-  
-  const handleEdit = (budget: Budget) => {
+  const handleEdit = (budget: BudgetWithSpent) => {
     setEditingBudget(budget);
   };
 
-  const handleFormSubmit = (updatedBudget: Budget) => {
-     const index = budgets.findIndex(b => b.id === updatedBudget.id);
-     if (index > -1) {
-       const newBudgets = [...budgets];
-       newBudgets[index] = {...updatedBudget, categoryName: getCategoryInfo(updatedBudget.categoryId)?.name};
-       onBudgetsChange(newBudgets);
+  const handleFormSubmit = (data: { categoryId: string, amount: number }) => {
+     if (editingBudget) {
+       onUpdate({ id: editingBudget.id, ...data });
      }
     setEditingBudget(null);
   };
@@ -101,7 +94,7 @@ export default function BudgetsTable({ budgets, categories, onBudgetsChange }: B
                         <Edit className="mr-2 h-4 w-4" /> Edit
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => handleDelete(budget.id)} className="text-red-600 focus:text-red-600 focus:bg-red-50">
+                      <DropdownMenuItem onClick={() => onDelete(budget.id)} className="text-red-600 focus:text-red-600 focus:bg-red-50">
                         <Trash2 className="mr-2 h-4 w-4" /> Delete
                       </DropdownMenuItem>
                     </DropdownMenuContent>

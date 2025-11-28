@@ -1,33 +1,42 @@
-"use client";
+'use client';
 
-import { useState } from 'react';
+import { useMemo } from 'react';
 import PageHeader from '@/components/page-header';
 import CategoriesTable from './components/categories-table';
 import { CategoryFormDialog } from './components/category-form-dialog';
-import { mockCategories } from '@/lib/data';
 import type { Category } from '@/lib/types';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where, doc } from 'firebase/firestore';
+import { addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { Loader2 } from 'lucide-react';
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>(mockCategories);
+  const { user } = useUser();
+  const firestore = useFirestore();
 
-  const handleFormSubmit = (newOrUpdatedCategory: Category) => {
-    setCategories(prevCategories => {
-      const index = prevCategories.findIndex(c => c.id === newOrUpdatedCategory.id);
-      if (index > -1) {
-        // Update existing category
-        const newCategories = [...prevCategories];
-        newCategories[index] = newOrUpdatedCategory;
-        return newCategories;
-      } else {
-        // Add new category
-        return [newOrUpdatedCategory, ...prevCategories];
-      }
-    });
-  };
+  const categoriesQuery = useMemoFirebase(() => 
+    user ? query(collection(firestore, 'users', user.uid, 'categories')) : null, 
+    [firestore, user]
+  );
+  const { data: categories, isLoading } = useCollection<Category>(categoriesQuery);
 
-  const handleCategoriesChange = (updatedCategories: Category[]) => {
-    setCategories(updatedCategories);
+  const handleFormSubmit = (data: Omit<Category, 'id' | 'userId'>) => {
+    if (!user) return;
+    const newCategory = { ...data, userId: user.uid };
+    addDocumentNonBlocking(collection(firestore, 'users', user.uid, 'categories'), newCategory);
   };
+  
+  const handleUpdate = (category: Omit<Category, 'userId'>) => {
+     if (!user) return;
+     const docRef = doc(firestore, 'users', user.uid, 'categories', category.id);
+     updateDocumentNonBlocking(docRef, category);
+  }
+  
+  const handleDelete = (categoryId: string) => {
+      if(!user) return;
+      const docRef = doc(firestore, 'users', user.uid, 'categories', categoryId);
+      deleteDocumentNonBlocking(docRef);
+  }
 
   return (
     <>
@@ -36,7 +45,13 @@ export default function CategoriesPage() {
         description="Manage your spending categories."
         actions={<CategoryFormDialog onFormSubmit={handleFormSubmit} />}
       />
-      <CategoriesTable categories={categories} onCategoriesChange={handleCategoriesChange} />
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+        <CategoriesTable categories={categories || []} onUpdate={handleUpdate} onDelete={handleDelete} />
+      )}
     </>
   );
 }

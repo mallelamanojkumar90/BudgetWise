@@ -1,10 +1,9 @@
-
 "use client";
 
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
-import { PieChart, Pie, Cell, Tooltip } from "recharts";
-import { mockExpenses, mockCategories } from '@/lib/data';
+import { PieChart, Pie, Cell } from "recharts";
+import type { Expense, Category } from '@/lib/types';
 import type { ChartConfig } from "@/components/ui/chart";
 import { useMemo, useState, useEffect } from "react";
 import * as LucideIcons from 'lucide-react';
@@ -15,11 +14,16 @@ const chartColors = [
   "hsl(var(--chart-3))",
   "hsl(var(--chart-4))",
   "hsl(var(--chart-5))",
-  "hsl(210, 40%, 70%)", // Lighter primary
-  "hsl(16, 100%, 80%)", // Lighter accent
+  "hsl(210, 40%, 70%)",
+  "hsl(16, 100%, 80%)",
 ];
 
-export default function SpendingByCategoryChart() {
+interface SpendingByCategoryChartProps {
+    expenses: Expense[];
+    categories: Category[];
+}
+
+export default function SpendingByCategoryChart({ expenses, categories }: SpendingByCategoryChartProps) {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -28,19 +32,19 @@ export default function SpendingByCategoryChart() {
 
   const { chartData, chartConfig } = useMemo(() => {
     const spendingByCategory: { [key: string]: number } = {};
-    mockExpenses.forEach(expense => {
+    expenses.forEach(expense => {
       spendingByCategory[expense.categoryId] = (spendingByCategory[expense.categoryId] || 0) + expense.amount;
     });
 
-    const data = mockCategories
+    const data = categories
       .map((category, index) => ({
         name: category.name,
         value: spendingByCategory[category.id] || 0,
         fill: chartColors[index % chartColors.length],
-        iconName: category.iconName, // Store iconName
+        iconName: category.iconName,
       }))
-      .filter(item => item.value > 0) // Only show categories with spending
-      .sort((a, b) => b.value - a.value); // Sort by value descending
+      .filter(item => item.value > 0)
+      .sort((a, b) => b.value - a.value);
 
     const config: ChartConfig = {};
     data.forEach(item => {
@@ -48,15 +52,14 @@ export default function SpendingByCategoryChart() {
       config[item.name] = {
         label: item.name,
         color: item.fill,
-        icon: IconComponent, // Look up the component
+        icon: IconComponent,
       };
     });
     return { chartData: data, chartConfig: config };
-  }, []);
+  }, [expenses, categories]);
 
 
   if (!isClient) {
-    // Render placeholder or null on server to avoid hydration mismatch
     return (
       <Card className="shadow-lg">
         <CardHeader>

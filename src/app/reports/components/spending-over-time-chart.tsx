@@ -2,10 +2,10 @@
 
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { mockExpenses } from '@/lib/data';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
+import type { Expense } from '@/lib/types';
 import type { ChartConfig } from "@/components/ui/chart";
-import { format, startOfMonth, eachDayOfInterval, subMonths } from 'date-fns';
+import { format, eachDayOfInterval, subDays } from 'date-fns';
 import { useMemo, useState, useEffect } from "react";
 
 const chartConfig = {
@@ -15,7 +15,11 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export default function SpendingOverTimeChart() {
+interface SpendingOverTimeChartProps {
+    expenses: Expense[];
+}
+
+export default function SpendingOverTimeChart({ expenses }: SpendingOverTimeChartProps) {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -23,23 +27,19 @@ export default function SpendingOverTimeChart() {
   }, []);
   
   const chartData = useMemo(() => {
-    // Aggregate expenses by day for the last 30 days (or current month)
     const endDate = new Date();
-    const startDate = subMonths(endDate, 1); // Last 30 days approx
-    // const startDate = startOfMonth(new Date()); // Current month
-
+    const startDate = subDays(endDate, 30);
     const daysInInterval = eachDayOfInterval({ start: startDate, end: endDate });
 
     const dailySpending = daysInInterval.map(day => {
       const dayStr = format(day, "MMM dd");
-      const total = mockExpenses
-        .filter(exp => format(exp.date, "yyyy-MM-dd") === format(day, "yyyy-MM-dd"))
+      const total = expenses
+        .filter(exp => format(exp.date.toDate(), "yyyy-MM-dd") === format(day, "yyyy-MM-dd"))
         .reduce((sum, exp) => sum + exp.amount, 0);
       return { date: dayStr, spending: total };
     });
     return dailySpending;
-  }, []);
-
+  }, [expenses]);
 
   if (!isClient) {
     return (
@@ -74,7 +74,7 @@ export default function SpendingOverTimeChart() {
               tickLine={false}
               tickMargin={10}
               axisLine={false}
-              tickFormatter={(value) => value.slice(0, 6)} // Shorten date label
+              tickFormatter={(value) => value.slice(0, 6)}
             />
             <YAxis 
              tickFormatter={(value) => `$${value}`}

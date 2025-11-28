@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
@@ -15,12 +15,11 @@ import type { Category } from '@/lib/types';
 import { PlusCircle } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 
-
 interface CategoryFormDialogProps {
   category?: Category | null;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  onFormSubmit?: (category: Category) => void;
+  onFormSubmit: (data: { name: string; icon: keyof typeof LucideIcons }) => void;
 }
 
 export function CategoryFormDialog({ 
@@ -40,16 +39,7 @@ export function CategoryFormDialog({
   }, [controlledOpen]);
 
   const handleSubmit = (data: { name: string; icon: keyof typeof LucideIcons }) => {
-    // data.icon is the icon name (string)
-    const newOrUpdatedCategory: Category = {
-      id: category?.id || `cat${Date.now()}`,
-      name: data.name,
-      iconName: data.icon, // Store the icon name string
-    };
-    
-    if (onFormSubmit) {
-      onFormSubmit(newOrUpdatedCategory);
-    }
+    onFormSubmit(data);
     setIsOpen(false);
   };
 

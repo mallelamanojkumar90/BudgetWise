@@ -1,12 +1,20 @@
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, DollarSign } from "lucide-react";
-import { mockExpenses } from '@/lib/data'; // For demo purposes
+import type { Expense } from '@/lib/types';
 
-export default function TotalSpendingCard() {
-  // Calculate total spending (mock)
-  const totalSpending = mockExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-  const previousMonthSpending = 1350.75; // Mock data
-  const percentageChange = ((totalSpending - previousMonthSpending) / previousMonthSpending) * 100;
+interface TotalSpendingCardProps {
+    currentMonthExpenses: Expense[];
+    previousMonthExpenses: Expense[];
+}
+
+export default function TotalSpendingCard({ currentMonthExpenses, previousMonthExpenses }: TotalSpendingCardProps) {
+  const totalSpending = currentMonthExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+  const previousMonthSpending = previousMonthExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+  
+  const percentageChange = previousMonthSpending > 0 
+    ? ((totalSpending - previousMonthSpending) / previousMonthSpending) * 100 
+    : totalSpending > 0 ? 100 : 0;
+  
   const isIncrease = percentageChange > 0;
 
   return (
@@ -17,10 +25,12 @@ export default function TotalSpendingCard() {
       </CardHeader>
       <CardContent>
         <div className="text-3xl font-bold">${totalSpending.toFixed(2)}</div>
-        <p className={`text-xs mt-1 ${isIncrease ? 'text-red-500' : 'text-green-500'} flex items-center`}>
-          {isIncrease ? <TrendingUp className="mr-1 h-4 w-4" /> : <TrendingDown className="mr-1 h-4 w-4" />}
-          {Math.abs(percentageChange).toFixed(2)}% from last month
-        </p>
+        {previousMonthSpending > 0 && (
+            <p className={`text-xs mt-1 ${isIncrease ? 'text-red-500' : 'text-green-500'} flex items-center`}>
+            {isIncrease ? <TrendingUp className="mr-1 h-4 w-4" /> : <TrendingDown className="mr-1 h-4 w-4" />}
+            {Math.abs(percentageChange).toFixed(2)}% from last month
+            </p>
+        )}
       </CardContent>
       <CardFooter>
         <CardDescription>Based on all recorded expenses.</CardDescription>

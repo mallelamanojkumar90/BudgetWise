@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
@@ -9,20 +9,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
-  DialogClose,
 } from "@/components/ui/dialog";
 import ExpenseForm from "./expense-form";
-import type { Category, Expense } from '@/lib/types';
+import type { Category } from '@/lib/types';
 import { PlusCircle } from 'lucide-react';
-import { mockExpenses } from '@/lib/data'; // For mock data manipulation demo
 
 interface ExpenseFormDialogProps {
   categories: Category[];
-  expense?: Expense | null; // For editing
-  open?: boolean; // To control dialog visibility from parent
-  onOpenChange?: (open: boolean) => void; // To update parent state
-  onFormSubmit?: (expense: Expense) => void; // Callback after form submission
+  expense?: { description: string; amount: number; categoryId: string; date: Date } | null;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onFormSubmit: (data: { description: string; amount: number; categoryId: string; date: Date }) => void;
 }
 
 export function ExpenseFormDialog({ 
@@ -32,34 +29,24 @@ export function ExpenseFormDialog({
   onOpenChange: setControlledOpen,
   onFormSubmit 
 }: ExpenseFormDialogProps) {
-  // If 'open' prop is not provided, dialog manages its own state
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setIsOpen = setControlledOpen !== undefined ? setControlledOpen : setInternalOpen;
 
-  // Effect to handle controlled 'open' prop changes
   useEffect(() => {
     if (controlledOpen !== undefined) {
       setInternalOpen(controlledOpen);
     }
   }, [controlledOpen]);
 
-
-  const handleSubmit = (data: any) => {
-    const newOrUpdatedExpense: Expense = {
-      id: expense?.id || `exp${Date.now()}`, // Generate new ID if not editing
-      ...data,
-    };
-    
-    if (onFormSubmit) {
-      onFormSubmit(newOrUpdatedExpense);
-    }
-    setIsOpen(false); // Close dialog on submit
+  const handleSubmit = (data: { description: string; amount: number; categoryId: string; date: Date }) => {
+    onFormSubmit(data);
+    setIsOpen(false);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      {!expense && ( // Only show trigger if not in edit mode (dialog opened programmatically)
+      {!expense && (
         <DialogTrigger asChild>
           <Button>
             <PlusCircle className="mr-2 h-4 w-4" />

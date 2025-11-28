@@ -1,27 +1,35 @@
-import type { LucideIcon } from 'lucide-react';
+import { Timestamp } from 'firebase/firestore';
 
 export interface Category {
   id: string;
   name: string;
-  iconName: string; // Changed from icon: LucideIcon
+  iconName: string;
+  userId: string;
 }
 
 export interface Expense {
-  id: string;
+  id:string;
   description: string;
   amount: number;
   categoryId: string;
-  date: Date;
+  date: Timestamp;
+  userId: string;
 }
 
 export interface Budget {
   id: string;
   categoryId: string;
-  categoryName?: string; // For display purposes
+  categoryName?: string; 
   amount: number;
-  spentAmount: number; // This would typically be calculated
-  period: 'monthly'; // Assuming monthly budgets for simplicity
+  userId: string;
 }
+
+// This type is calculated on the client, not stored in Firestore
+export interface BudgetWithSpent extends Budget {
+    spentAmount: number;
+    period: 'monthly';
+}
+
 
 // For chart data
 export interface ChartDataEntry {

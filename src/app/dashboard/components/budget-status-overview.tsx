@@ -1,12 +1,15 @@
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { mockBudgets } from '@/lib/data'; // For demo purposes
 import { Goal } from "lucide-react";
+import type { BudgetWithSpent } from '@/lib/types';
 
-export default function BudgetStatusOverview() {
-  // Calculate overall budget status (mock)
-  const totalBudgeted = mockBudgets.reduce((sum, budget) => sum + budget.amount, 0);
-  const totalSpent = mockBudgets.reduce((sum, budget) => sum + budget.spentAmount, 0);
+interface BudgetStatusOverviewProps {
+    budgets: BudgetWithSpent[];
+}
+
+export default function BudgetStatusOverview({ budgets }: BudgetStatusOverviewProps) {
+  const totalBudgeted = budgets.reduce((sum, budget) => sum + budget.amount, 0);
+  const totalSpent = budgets.reduce((sum, budget) => sum + budget.spentAmount, 0);
   const progressPercentage = totalBudgeted > 0 ? (totalSpent / totalBudgeted) * 100 : 0;
 
   return (
@@ -20,7 +23,7 @@ export default function BudgetStatusOverview() {
         <Progress value={progressPercentage} className="mt-2 h-3" />
          <div className="flex justify-between text-xs text-muted-foreground mt-1">
           <span>{progressPercentage.toFixed(0)}% Utilized</span>
-          <span>${(totalBudgeted - totalSpent).toFixed(2)} Remaining</span>
+          {totalBudgeted > 0 && <span>${(totalBudgeted - totalSpent).toFixed(2)} Remaining</span>}
         </div>
       </CardContent>
       <CardFooter>
