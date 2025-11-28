@@ -77,7 +77,7 @@ export default function SpendingOverTimeChart({ expenses }: SpendingOverTimeChar
               tickFormatter={(value) => value.slice(0, 6)}
             />
             <YAxis 
-             tickFormatter={(value) => `$${value}`}
+             tickFormatter={(value) => `₹${value}`}
             />
             <ChartTooltip
               cursor={false}

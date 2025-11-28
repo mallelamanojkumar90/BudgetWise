@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
@@ -148,7 +149,7 @@ export default function SettingsPage() {
     });
     doc.autoTable({
       head: [['ID', 'Description', 'Amount', 'Category ID', 'Date']],
-      body: data.expenses.map(e => [e.id, e.description, `$${e.amount.toFixed(2)}`, e.categoryId, format(e.date, 'yyyy-MM-dd')]),
+      body: data.expenses.map(e => [e.id, e.description, `₹${e.amount.toFixed(2)}`, e.categoryId, format(e.date, 'yyyy-MM-dd')]),
     });
 
     doc.autoTable({
@@ -158,7 +159,7 @@ export default function SettingsPage() {
     });
     doc.autoTable({
       head: [['ID', 'Category ID', 'Amount']],
-      body: data.budgets.map(b => [b.id, b.categoryId, `$${b.amount.toFixed(2)}`]),
+      body: data.budgets.map(b => [b.id, b.categoryId, `₹${b.amount.toFixed(2)}`]),
     });
 
     doc.save('budgetwise_data.pdf');
@@ -261,7 +262,7 @@ export default function SettingsPage() {
               <CardHeader>
                 <CardTitle>Preferences</CardTitle>
                 <CardDescription>Customize your app experience.</CardDescription>
-              </CardHeader>
+              </Header>
               <CardContent className="space-y-4">
                  <div className="space-y-1 max-w-xs">
                   <Label htmlFor="currency">Default Currency</Label>

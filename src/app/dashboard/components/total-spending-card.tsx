@@ -24,7 +24,7 @@ export default function TotalSpendingCard({ currentMonthExpenses, previousMonthE
         <DollarSign className="h-5 w-5 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <div className="text-3xl font-bold">${totalSpending.toFixed(2)}</div>
+        <div className="text-3xl font-bold">₹{totalSpending.toFixed(2)}</div>
         {previousMonthSpending > 0 && (
             <p className={`text-xs mt-1 ${isIncrease ? 'text-red-500' : 'text-green-500'} flex items-center`}>
             {isIncrease ? <TrendingUp className="mr-1 h-4 w-4" /> : <TrendingDown className="mr-1 h-4 w-4" />}

@@ -64,7 +64,7 @@ export default function ExpensesTable({ expenses, categories, onUpdate, onDelete
                 <Badge variant="outline">{getCategoryName(expense.categoryId)}</Badge>
               </TableCell>
               <TableCell>{format(expense.date.toDate(), 'MMM dd, yyyy')}</TableCell>
-              <TableCell className="text-right">${expense.amount.toFixed(2)}</TableCell>
+              <TableCell className="text-right">₹{expense.amount.toFixed(2)}</TableCell>
               <TableCell className="text-right">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

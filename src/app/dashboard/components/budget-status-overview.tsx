@@ -19,11 +19,11 @@ export default function BudgetStatusOverview({ budgets }: BudgetStatusOverviewPr
         <Goal className="h-5 w-5 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <div className="text-3xl font-bold">${totalSpent.toFixed(2)} <span className="text-lg text-muted-foreground">spent of ${totalBudgeted.toFixed(2)}</span></div>
+        <div className="text-3xl font-bold">₹{totalSpent.toFixed(2)} <span className="text-lg text-muted-foreground">spent of ₹{totalBudgeted.toFixed(2)}</span></div>
         <Progress value={progressPercentage} className="mt-2 h-3" />
          <div className="flex justify-between text-xs text-muted-foreground mt-1">
           <span>{progressPercentage.toFixed(0)}% Utilized</span>
-          {totalBudgeted > 0 && <span>${(totalBudgeted - totalSpent).toFixed(2)} Remaining</span>}
+          {totalBudgeted > 0 && <span>₹{(totalBudgeted - totalSpent).toFixed(2)} Remaining</span>}
         </div>
       </CardContent>
       <CardFooter>

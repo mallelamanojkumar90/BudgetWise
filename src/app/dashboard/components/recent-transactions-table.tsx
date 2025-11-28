@@ -40,7 +40,7 @@ export default function RecentTransactionsTable({ expenses, categories }: Recent
                     <Badge variant="outline">{getCategoryName(expense.categoryId)}</Badge>
                   </TableCell>
                   <TableCell>{format(expense.date.toDate(), 'MMM dd, yyyy')}</TableCell>
-                  <TableCell className="text-right">${expense.amount.toFixed(2)}</TableCell>
+                  <TableCell className="text-right">₹{expense.amount.toFixed(2)}</TableCell>
                 </TableRow>
               )) : (
                 <TableRow>

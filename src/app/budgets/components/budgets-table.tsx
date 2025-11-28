@@ -69,10 +69,10 @@ export default function BudgetsTable({ budgets, categories, onUpdate, onDelete }
                   {category && <IconComponent className="h-4 w-4 mr-2 text-muted-foreground" />}
                   {category?.name || 'Unknown Category'}
                 </TableCell>
-                <TableCell className="text-right">${budget.amount.toFixed(2)}</TableCell>
-                <TableCell className="text-right">${budget.spentAmount.toFixed(2)}</TableCell>
+                <TableCell className="text-right">₹{budget.amount.toFixed(2)}</TableCell>
+                <TableCell className="text-right">₹{budget.spentAmount.toFixed(2)}</TableCell>
                 <TableCell className={`text-right ${remaining < 0 ? 'text-destructive' : 'text-green-500'}`}>
-                  ${remaining.toFixed(2)}
+                  ₹{remaining.toFixed(2)}
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">

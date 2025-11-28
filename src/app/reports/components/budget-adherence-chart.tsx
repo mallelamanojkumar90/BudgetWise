@@ -92,7 +92,7 @@ export default function BudgetAdherenceChart({ budgets, categories }: BudgetAdhe
               axisLine={false}
             />
             <YAxis 
-              tickFormatter={(value) => `$${value}`}
+              tickFormatter={(value) => `₹${value}`}
             />
             <ChartTooltip
               cursor={false}
