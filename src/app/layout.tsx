@@ -27,11 +27,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
         <FirebaseClientProvider>
-            <AuthProvider>
-                {children}
-            </AuthProvider>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
         </FirebaseClientProvider>
         <Toaster />
       </body>
