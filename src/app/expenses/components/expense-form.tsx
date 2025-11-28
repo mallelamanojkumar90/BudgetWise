@@ -46,7 +46,7 @@ export default function ExpenseForm({ categories, expense, onSubmit, onClose }: 
       amount: Number(expense.amount) // ensure amount is number
     } : {
       description: "",
-      amount: undefined, // Use undefined for empty number input
+      amount: "" as any, // Use empty string for controlled input
       categoryId: "",
       date: new Date(),
     },

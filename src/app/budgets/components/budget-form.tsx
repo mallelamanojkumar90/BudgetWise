@@ -40,7 +40,7 @@ export default function BudgetForm({ categories, budget, onSubmit, onClose }: Bu
       amount: Number(budget.amount),
     } : {
       categoryId: "",
-      amount: undefined,
+      amount: "" as any,
     },
   });
 
