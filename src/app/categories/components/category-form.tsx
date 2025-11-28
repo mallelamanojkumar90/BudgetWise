@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,7 +24,17 @@ import {
 import type { Category } from '@/lib/types';
 import * as LucideIcons from 'lucide-react'; // Import all icons
 
-const iconNames = Object.keys(LucideIcons).filter(key => key !== 'createReactComponent' && key !== 'createLucideIcon' && key !== 'icons' && typeof LucideIcons[key as keyof typeof LucideIcons] === 'object') as (keyof typeof LucideIcons)[];
+const relevantIconNames: (keyof typeof LucideIcons)[] = [
+    'Home', 'Car', 'ShoppingBasket', 'Heart', 'Utensils', 'Film', 'Plane', 
+    'Book', 'Gift', 'Droplets', 'Phone', 'Briefcase', 'FirstAidKit', 'Receipt', 
+    'PiggyBank', 'Landmark', 'Bus', 'Shirt', 'Dumbbell', 'PawPrint', 'Tag', 
+    'ShoppingCart', 'Clapperboard', 'Ticket', 'Coffee', 'Pizza', 'GraduationCap', 
+    'Wrench', 'Baby', 'CreditCard', 'Building', 'Train', 'Activity', 'Airplay'
+];
+
+const iconNames = Object.keys(LucideIcons).filter(
+    key => relevantIconNames.includes(key as keyof typeof LucideIcons)
+) as (keyof typeof LucideIcons)[];
 
 const categoryFormSchema = z.object({
   name: z.string().min(2, { message: "Category name must be at least 2 characters." }).max(50, { message: "Category name must be at most 50 characters." }),
@@ -94,8 +105,8 @@ export default function CategoryForm({ category, onSubmit, onClose }: CategoryFo
                   <SelectContent className="max-h-60">
                     {iconNames.map((iconName) => {
                       const IconComponent = LucideIcons[iconName as keyof typeof LucideIcons];
-                      if (typeof IconComponent !== 'function' && typeof IconComponent !== 'object') return null; // Skip non-component exports (like default)
-                      const ActualIcon = typeof IconComponent === 'function' ? IconComponent : LucideIcons.Tag; // Lucide icons are objects with render function
+                      if (typeof IconComponent !== 'function' && typeof IconComponent !== 'object') return null;
+                      const ActualIcon = typeof IconComponent === 'function' ? IconComponent : LucideIcons.Tag;
                       return (
                         <SelectItem key={iconName} value={iconName}>
                           <div className="flex items-center gap-2">
@@ -121,3 +132,4 @@ export default function CategoryForm({ category, onSubmit, onClose }: CategoryFo
     </Form>
   );
 }
+
